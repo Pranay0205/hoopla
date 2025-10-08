@@ -2,7 +2,7 @@
 
 import argparse
 
-from lib.inverted_index import InvertedIndex
+from lib.inverted_index import InvertedIndex, build_command
 from lib.keyword_search import (
     search_command,
 )
@@ -23,16 +23,18 @@ def main() -> None:
 
     match args.command:
         case "build":
-            invertedidx = InvertedIndex()
-            invertedidx.build()
-            invertedidx.save()
-            docs = invertedidx.get_documents('merida')
-            print(f"First document for token 'merida' = {docs[0]}")
+            build_command()
+
         case "search":
-            print("Searching for:", args.query)
-            results = search_command(args.query)
-            for i, res in enumerate(results, 1):
-                print(f"{i}. {res['title']}")
+            try:
+                print("Searching for:", args.query)
+                results = search_command(args.query)
+                for i, res in enumerate(results, 1):
+                    print(f"{i}. {res['title']}")
+            except FileNotFoundError as e:
+                print(f"Error: {e}")
+                print("Please run 'build' command first to create the index.")
+
         case _:
             parser.exit(2, parser.format_help())
 

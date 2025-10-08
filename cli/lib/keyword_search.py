@@ -1,6 +1,8 @@
 from cgitb import text
 from typing import List
 import string
+
+from lib.inverted_index import InvertedIndex
 from .search_utils import (  # type: ignore
     DEFAULT_SEARCH_LIMIT,
     load_movies,
@@ -11,6 +13,7 @@ from nltk.stem import PorterStemmer  # type: ignore
 
 
 def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:
+
     movies = load_movies()
     results = []
     for movie in movies:
@@ -26,8 +29,12 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:
 
 
 def has_matching_token(query_tokens: list[str], title_tokens: list[str]) -> bool:
+    idx = InvertedIndex()
+    idx.load()
+
     for query_token in query_tokens:
-        for title_token in title_tokens:
+        docs_ids = idx.index[query_token]
+        for title_token in docs_ids:
             if query_token in title_token:
                 return True
     return False
