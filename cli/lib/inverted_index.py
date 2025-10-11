@@ -1,8 +1,7 @@
 from collections import defaultdict
 import os
 import pickle
-from lib.keyword_search import tokenizer
-from lib.search_utils import CACHE_DIR, PROJECT_ROOT, load_movies
+from lib.search_utils import stop_words_remover, tokenizer, CACHE_DIR, load_movies
 
 
 class InvertedIndex:
@@ -14,10 +13,8 @@ class InvertedIndex:
         self.docmap_path = os.path.join(CACHE_DIR, "docmap.pkl")
 
     def __add_document(self, doc_id: int, text: str) -> None:
-        self.docmap[doc_id] = text
-
         tokens = tokenizer(text)
-
+        tokens = stop_words_remover(tokens)
         for token in tokens:
             self.index[token].add(doc_id)
 
