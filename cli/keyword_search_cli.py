@@ -19,6 +19,11 @@ def main() -> None:
         "search", help="Search movies using BM25")
     search_parser.add_argument("query", type=str, help="Search query")
 
+    tf_parser = subparsers.add_parser(
+        "tf", help="Get frequency of a term in the document")
+    tf_parser.add_argument("doc_id", type=str, help="Document Id")
+    tf_parser.add_argument("term", type=str, help="Search Term")
+
     args = parser.parse_args()
 
     match args.command:
@@ -34,6 +39,18 @@ def main() -> None:
             except FileNotFoundError as e:
                 print(f"Error: {e}")
                 print("Please run 'build' command first to create the index.")
+        case "tf":
+            try:
+                index = InvertedIndex()
+                index.load()
+                frequency = index.get_tf(args.doc_id, args.term)
+                if frequency == 0:
+                    print("0\n")
+                else:
+                    print(frequency, end="\n")
+            except FileNotFoundError as e:
+                print(f"Error: {e}")
+                print("Please run 'build' command first to create the term frequencies.")
 
         case _:
             parser.exit(2, parser.format_help())
