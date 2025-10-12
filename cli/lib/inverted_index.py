@@ -1,4 +1,5 @@
 from collections import defaultdict
+import math
 import os
 import pickle
 from typing import Counter
@@ -86,6 +87,21 @@ class InvertedIndex:
             return 0
 
         return self.term_frequencies[int(doc_id)][terms[0]]
+
+    def get_idf(self, term: str) -> float:
+        doc_count = len(self.term_frequencies)
+
+        terms = tokenizer(term)
+        terms = stop_words_remover(terms)
+
+        if not terms:
+            term_doc_count = 0
+        else:
+            term_doc_count = len(self.index[terms[0]])
+
+        idf = math.log((doc_count + 1) / (term_doc_count + 1))
+
+        return idf
 
 
 def build_command() -> None:
