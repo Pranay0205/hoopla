@@ -5,7 +5,11 @@ import math
 
 from lib.inverted_index import InvertedIndex, build_command
 from lib.keyword_search import (
+    bm25_idf_command,
+    idf_command,
     search_command,
+    tf_command,
+    tf_idf_command,
 )
 
 
@@ -34,6 +38,12 @@ def main() -> None:
     tf_idf_parser.add_argument("doc_id", type=str, help="Document Id")
     tf_idf_parser.add_argument("term", type=str, help="Search Term")
 
+    bm25_idf_parser = subparsers.add_parser(
+        'bm25idf', help="Get BM25 IDF score for a given term"
+    )
+    bm25_idf_parser.add_argument(
+        "term", type=str, help="Term to get BM25 IDF score for")
+
     args = parser.parse_args()
 
     match args.command:
@@ -51,9 +61,7 @@ def main() -> None:
                 print("Please run 'build' command first to create the index.")
         case "tf":
             try:
-                idx = InvertedIndex()
-                idx.load()
-                frequency = idx.get_tf(args.doc_id, args.term)
+                frequency = tf_command(args.doc_id, args.term)
                 if frequency == 0:
                     print("0\n")
                 else:
@@ -64,10 +72,7 @@ def main() -> None:
 
         case "idf":
             try:
-                idx = InvertedIndex()
-                idx.load()
-                idf = idx.get_idf(args.term)
-
+                idf = idf_command(args.term)
                 print(
                     f"Inverse document frequency of '{args.term}': {idf:.2f}")
             except FileNotFoundError as e:
@@ -76,11 +81,19 @@ def main() -> None:
 
         case "tfidf":
             try:
-                idx = InvertedIndex()
-                idx.load()
-                tf_idf = idx.get_tf_idf(args.doc_id, args.term)
+                tf_idf = tf_idf_command(args.doc_id, args.term)
                 print(
                     f"TF-IDF score of '{args.term}' in document '{args.doc_id}': {tf_idf:.2f}")
+
+            except FileNotFoundError as e:
+                print(f"Error: {e}")
+                print("Please run 'build' command first to create the term frequencies.")
+
+        case "bm25idf":
+            try:
+
+                bm25idf = bm25_idf_command(args.term)
+                print(f"BM25 IDF score of '{args.term}': {bm25idf:.2f}")
 
             except FileNotFoundError as e:
                 print(f"Error: {e}")

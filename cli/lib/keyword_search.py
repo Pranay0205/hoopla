@@ -1,3 +1,4 @@
+import re
 from .inverted_index import InvertedIndex
 from .search_utils import (  # type: ignore
     DEFAULT_SEARCH_LIMIT,
@@ -29,3 +30,30 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:
                 break
 
     return result
+
+
+def tf_command(doc_id: str, term: str) -> int:
+    idx = InvertedIndex()
+    idx.load()
+    return idx.get_tf(doc_id, term)
+
+
+def idf_command(term: str) -> float:
+    idx = InvertedIndex()
+    idx.load()
+
+    return idx.get_idf(term)
+
+
+def tf_idf_command(doc_id, term: str) -> float:
+    idx = InvertedIndex()
+    idx.load()
+
+    return idx.get_tf_idf(doc_id, term)
+
+
+def bm25_idf_command(term: str) -> float:
+    idx = InvertedIndex()
+    idx.load()
+
+    return idx.get_bm25_idf(term)

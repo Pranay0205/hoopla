@@ -2,6 +2,7 @@ from collections import defaultdict
 import math
 import os
 import pickle
+import token
 from typing import Counter
 from lib.search_utils import stop_words_remover, tokenizer, CACHE_DIR, load_movies
 
@@ -9,9 +10,15 @@ from lib.search_utils import stop_words_remover, tokenizer, CACHE_DIR, load_movi
 class InvertedIndex:
 
     def __init__(self) -> None:
+        # index = "term": {"1", "2", "3", "4"}
         self.index = defaultdict(set)
+
+        # doc_map = "1" : {"id": "1", "title": "movie_title", "description": "<description>", ...}
         self.docmap: dict[int, dict] = {}
+
+        # term_freq = "1" : Counter({"term_1": 4 -> (count), "term_2": 6 ...} ...)
         self.term_frequencies = defaultdict(Counter)
+
         self.index_path = os.path.join(CACHE_DIR, "index.pkl")
         self.docmap_path = os.path.join(CACHE_DIR, "docmap.pkl")
         self.term_frequencies_path = os.path.join(
@@ -111,15 +118,31 @@ class InvertedIndex:
         terms = stop_words_remover(terms)
 
         if not terms:
-            term_doc_count = 0
+            doc_freq = 0
         else:
-            term_doc_count = len(self.index[terms[0]])
+            doc_freq = len(self.index[terms[0]])
 
-        doc_count = len(self.term_frequencies)
+        doc_count = len(self.docmap)
 
-        idf = math.log((doc_count + 1) / (term_doc_count + 1))
+        idf = math.log((doc_count + 1) / (doc_freq + 1))
 
         return tf * idf
+
+    def get_bm25_idf(self, term: str) -> float:
+
+        doc_count = len(self.docmap)
+        terms = tokenizer(term)
+        terms = stop_words_remover(terms)
+
+        if not terms:
+            doc_freq = 0
+        else:
+            doc_freq = len(self.index[terms[0]])
+
+        bm25_idf = math.log(
+            (doc_count - doc_freq + 0.5) / (doc_freq + 0.5) + 1)
+
+        return bm25_idf
 
 
 def build_command() -> None:
