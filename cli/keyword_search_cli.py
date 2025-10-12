@@ -26,8 +26,13 @@ def main() -> None:
     tf_parser.add_argument("term", type=str, help="Search Term")
 
     idf_parser = subparsers.add_parser(
-        "idf", help="Get Inverse frequency of a term in the document")
+        "idf", help="Get Inverse frequency of a term in the documents")
     idf_parser.add_argument("term", type=str, help="Search Term")
+
+    tf_idf_parser = subparsers.add_parser(
+        "tfidf", help="Get TF-IDF of a term in the document")
+    tf_idf_parser.add_argument("doc_id", type=str, help="Document Id")
+    tf_idf_parser.add_argument("term", type=str, help="Search Term")
 
     args = parser.parse_args()
 
@@ -65,6 +70,18 @@ def main() -> None:
 
                 print(
                     f"Inverse document frequency of '{args.term}': {idf:.2f}")
+            except FileNotFoundError as e:
+                print(f"Error: {e}")
+                print("Please run 'build' command first to create the term frequencies.")
+
+        case "tfidf":
+            try:
+                idx = InvertedIndex()
+                idx.load()
+                tf_idf = idx.get_tf_idf(args.doc_id, args.term)
+                print(
+                    f"TF-IDF score of '{args.term}' in document '{args.doc_id}': {tf_idf:.2f}")
+
             except FileNotFoundError as e:
                 print(f"Error: {e}")
                 print("Please run 'build' command first to create the term frequencies.")

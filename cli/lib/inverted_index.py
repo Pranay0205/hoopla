@@ -103,6 +103,24 @@ class InvertedIndex:
 
         return idf
 
+    def get_tf_idf(self, doc_id: str,  term: str) -> float:
+
+        tf = self.get_tf(doc_id, term)
+
+        terms = tokenizer(term)
+        terms = stop_words_remover(terms)
+
+        if not terms:
+            term_doc_count = 0
+        else:
+            term_doc_count = len(self.index[terms[0]])
+
+        doc_count = len(self.term_frequencies)
+
+        idf = math.log((doc_count + 1) / (term_doc_count + 1))
+
+        return tf * idf
+
 
 def build_command() -> None:
     idx = InvertedIndex()
