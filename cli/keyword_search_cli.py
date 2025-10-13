@@ -6,11 +6,13 @@ import math
 from lib.inverted_index import InvertedIndex, build_command
 from lib.keyword_search import (
     bm25_idf_command,
+    bm25_tf_command,
     idf_command,
     search_command,
     tf_command,
     tf_idf_command,
 )
+from lib.search_utils import BM25_K1
 
 
 def main() -> None:
@@ -24,25 +26,39 @@ def main() -> None:
         "search", help="Search movies using BM25")
     search_parser.add_argument("query", type=str, help="Search query")
 
+    # TF
     tf_parser = subparsers.add_parser(
         "tf", help="Get frequency of a term in the document")
     tf_parser.add_argument("doc_id", type=str, help="Document Id")
     tf_parser.add_argument("term", type=str, help="Search Term")
 
+    # IDF
     idf_parser = subparsers.add_parser(
         "idf", help="Get Inverse frequency of a term in the documents")
     idf_parser.add_argument("term", type=str, help="Search Term")
 
+    # TF-IDF
     tf_idf_parser = subparsers.add_parser(
         "tfidf", help="Get TF-IDF of a term in the document")
     tf_idf_parser.add_argument("doc_id", type=str, help="Document Id")
     tf_idf_parser.add_argument("term", type=str, help="Search Term")
 
+    # BM25 IDF
     bm25_idf_parser = subparsers.add_parser(
         'bm25idf', help="Get BM25 IDF score for a given term"
     )
     bm25_idf_parser.add_argument(
         "term", type=str, help="Term to get BM25 IDF score for")
+
+    # BM25 TF
+    bm25_tf_parser = subparsers.add_parser(
+        "bm25tf", help="Get BM25 TF score for a given document ID and term"
+    )
+    bm25_tf_parser.add_argument("doc_id", type=int, help="Document ID")
+    bm25_tf_parser.add_argument(
+        "term", type=str, help="Term to get BM25 TF score for")
+    bm25_tf_parser.add_argument(
+        "k1", type=float, nargs='?', default=BM25_K1, help="Tunable BM25 K1 parameter")
 
     args = parser.parse_args()
 
@@ -94,6 +110,18 @@ def main() -> None:
 
                 bm25idf = bm25_idf_command(args.term)
                 print(f"BM25 IDF score of '{args.term}': {bm25idf:.2f}")
+
+            except FileNotFoundError as e:
+                print(f"Error: {e}")
+                print("Please run 'build' command first to create the term frequencies.")
+
+        case "bm25tf":
+            try:
+
+                bm25tf = bm25_tf_command(args.doc_id, args.term, args.k1)
+
+                print(
+                    f"BM25 TF score of '{args.term}' in document '{args.doc_id}': {bm25tf:.2f}")
 
             except FileNotFoundError as e:
                 print(f"Error: {e}")

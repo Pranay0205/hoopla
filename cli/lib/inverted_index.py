@@ -4,7 +4,7 @@ import os
 import pickle
 import token
 from typing import Counter
-from lib.search_utils import stop_words_remover, tokenizer, CACHE_DIR, load_movies
+from lib.search_utils import BM25_K1, stop_words_remover, tokenizer, CACHE_DIR, load_movies
 
 
 class InvertedIndex:
@@ -143,6 +143,13 @@ class InvertedIndex:
             (doc_count - doc_freq + 0.5) / (doc_freq + 0.5) + 1)
 
         return bm25_idf
+
+    def get_bm25_tf(self, doc_id: str, term: str, k1: float = BM25_K1) -> float:
+        tf = self.get_tf(doc_id, term)
+
+        tf_component = (tf * (k1 + 1)) / (tf + k1)
+
+        return tf_component
 
 
 def build_command() -> None:
