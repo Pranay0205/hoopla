@@ -1,6 +1,7 @@
 import re
 from .inverted_index import InvertedIndex
 from .search_utils import (  # type: ignore
+    BM25_B,
     BM25_K1,
     DEFAULT_SEARCH_LIMIT,
     stop_words_remover,
@@ -33,7 +34,7 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:
     return result
 
 
-def tf_command(doc_id: str, term: str) -> int:
+def tf_command(doc_id: int, term: str) -> int:
     idx = InvertedIndex()
     idx.load()
     return idx.get_tf(doc_id, term)
@@ -46,7 +47,7 @@ def idf_command(term: str) -> float:
     return idx.get_idf(term)
 
 
-def tf_idf_command(doc_id, term: str) -> float:
+def tf_idf_command(doc_id: int, term: str) -> float:
     idx = InvertedIndex()
     idx.load()
 
@@ -60,8 +61,8 @@ def bm25_idf_command(term: str) -> float:
     return idx.get_bm25_idf(term)
 
 
-def bm25_tf_command(doc_id: str, term, k1=BM25_K1):
+def bm25_tf_command(doc_id: int, term, k1=BM25_K1, b=BM25_B):
     idx = InvertedIndex()
     idx.load()
 
-    return idx.get_bm25_tf(doc_id, term, k1)
+    return idx.get_bm25_tf(doc_id, term, k1, b)
