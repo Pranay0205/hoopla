@@ -66,3 +66,10 @@ def bm25_tf_command(doc_id: int, term, k1=BM25_K1, b=BM25_B):
     idx.load()
 
     return idx.get_bm25_tf(doc_id, term, k1, b)
+
+
+def bm25search(query: str, limit=5):
+    idx = InvertedIndex()
+    idx.load()
+
+    return idx.bm25_search(query, limit)

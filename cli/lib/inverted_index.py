@@ -1,7 +1,9 @@
+from audioop import reverse
 from collections import defaultdict
 import math
 import os
 import pickle
+from textwrap import indent
 import token
 from typing import Counter
 from lib.search_utils import BM25_B, BM25_K1, stop_words_remover, tokenizer, CACHE_DIR, load_movies
@@ -13,7 +15,7 @@ class InvertedIndex:
         # index = "term": {"1", "2", "3", "4"}
         self.index = defaultdict(set)
 
-        # doc_map = "1" : {"id": "1", "title": "movie_title", "description": "<description>", ...}
+        # docmap = "1" : {"id": "1", "title": "movie_title", "description": "<description>", ...}
         self.docmap: dict[int, dict] = {}
 
         # term_freq = "1" : Counter({"term_1": 4 -> (count), "term_2": 6 ...} ...)
@@ -180,6 +182,33 @@ class InvertedIndex:
         tf_component = (tf * (k1 + 1)) / (tf + k1 * length_norm)
 
         return tf_component
+
+    def bm25(self, doc_id: int, term: str) -> float:
+        bm25_tf = self.get_bm25_tf(doc_id, term)
+        bm25_idf = self.get_bm25_idf(term)
+
+        return bm25_tf * bm25_idf
+
+    def bm25_search(self, query: str, limit: int):
+        terms = tokenizer(query)
+        terms = stop_words_remover(terms)
+        bm25_scores: dict[int, float] = {}
+
+        for term in terms:
+            for doc_id in self.index[term]:
+                if doc_id not in bm25_scores:
+                    bm25_scores[doc_id] = self.bm25(doc_id, term)
+                else:
+                    bm25_scores[doc_id] += self.bm25(doc_id, term)
+
+        sorted_bm25_score = sorted(bm25_scores.items(),
+                                   key=lambda item: item[1], reverse=True)
+
+        for i, item in enumerate(sorted_bm25_score):
+            if i < limit:
+                document = self.docmap[item[0]]
+                print(
+                    f"{i + 1}. ({document["id"]}) {document["title"]} - Score: {item[1]:.2f}")
 
 
 def build_command() -> None:
