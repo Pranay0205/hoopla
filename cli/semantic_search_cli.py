@@ -2,7 +2,7 @@
 
 import argparse
 
-from lib.semantic_search import verify_model
+from lib.semantic_search import embed_text, verify_model
 
 
 def main():
@@ -12,6 +12,11 @@ def main():
         dest="command", help="Available commands")
     subparsers.add_parser("verify", help="Build the inverted index")
 
+    embed_text_parser = subparsers.add_parser(
+        "embed_text", help="Generate text embedding")
+
+    embed_text_parser.add_argument("text", type=str, help="Search query")
+
     args = parser.parse_args()
 
     match args.command:
@@ -20,6 +25,9 @@ def main():
 
         case "verify":
             verify_model()
+
+        case "embed_text":
+            embed_text(args.text)
 
 
 if __name__ == "__main__":
