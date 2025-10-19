@@ -1,6 +1,6 @@
 import re
 from .inverted_index import InvertedIndex
-from .search_utils import (  # type: ignore
+from .search_utils import (
     BM25_B,
     BM25_K1,
     DEFAULT_SEARCH_LIMIT,

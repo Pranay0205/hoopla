@@ -1,6 +1,4 @@
-import array
 import os
-from typing import Any, DefaultDict
 from sentence_transformers import SentenceTransformer
 import numpy as np
 
@@ -57,6 +55,35 @@ class SemanticSearch:
 
         return embeddings[0]
 
+    def search(self, query, limit):
+
+        if self.embeddings is None or len(self.embeddings) == 0:
+            raise ValueError(
+                "No embeddings loaded. Call `load_or_create_embeddings` first.")
+
+        if self.documents is None or len(self.documents) == 0:
+            raise ValueError(
+                "No documents loaded. Call `load_or_create_embeddings` first.")
+
+        query_emb = self.generate_embedding(query)
+
+        results = []
+        for i, embedding in enumerate(self.embeddings):
+            score = cosine_similarity(query_emb, embedding)
+            results.append((score, self.documents[i]))
+
+        results.sort(key=lambda item: item[0], reverse=True)
+
+        output = []
+        for i, (score, doc) in enumerate(results[:limit]):
+            output.append({
+                "score": score,
+                "title": doc["title"],
+                "description": doc["description"]
+            })
+
+        return output
+
 
 def verify_model():
     semantic_model = SemanticSearch()
@@ -83,3 +110,46 @@ def verify_embeddings():
     print(f"Number of docs:   {len(documents)}")
     print(
         f"Embeddings shape: {embeddings.shape[0]} vectors in {embeddings.shape[1]} dimensions")
+
+
+def embed_query_text(query):
+    semantic_model = SemanticSearch()
+
+    embedding = semantic_model.generate_embedding(query)
+
+    print(f"Query: {query}")
+    print(f"First 5 dimensions: {embedding[:5]}")
+    print(f"Shape: {embedding.shape}")
+
+
+def cosine_similarity(vec1, vec2):
+    dot_product = np.dot(vec1, vec2)
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+
+    return dot_product / (norm1 * norm2)
+
+
+def truncate_text(text, length=100):
+    return text[:length] + "..." if len(text) > length else text
+
+
+def search(query, limit=5):
+    semantic_model = SemanticSearch()
+
+    documents = load_movies()
+
+    embeddings = semantic_model.load_or_create_embeddings(documents)
+
+    output = semantic_model.search(query, limit)
+
+    print(f"Query: {query}")
+    print(f"Top {len(output)} results:")
+    print()
+
+    for i, result in enumerate(output):
+        print(f"{i + 1}. {result["title"]} (score: {result["score"]:.2f})")
+        print(f"{truncate_text(result["description"])}\n")
