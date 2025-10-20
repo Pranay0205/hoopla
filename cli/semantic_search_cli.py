@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-from lib.semantic_search import search, verify_model, embed_query_text, embed_text, verify_embeddings, chunker
+from lib.semantic_search import search, verify_model, embed_query_text, embed_text, verify_embeddings, chunk_text
 
 
 def main():
@@ -40,6 +40,9 @@ def main():
     chunk_parser.add_argument("--chunk-size", type=int, default=200,
                               help="Specify the chunk size to chunk the result (default = 200)")
 
+    chunk_parser.add_argument("--overlap", type=int, default=2,
+                              help="Specify the overlap size between chunks (default = 2)")
+
     args = parser.parse_args()
 
     match args.command:
@@ -62,7 +65,7 @@ def main():
             search(args.query, args.limit)
 
         case "chunk":
-            chunker(args.query, args.chunk_size)
+            chunk_text(args.query, args.chunk_size, args.overlap)
 
         case _:
             parser.print_help()

@@ -155,7 +155,7 @@ def search(query, limit=5):
         print(f"{truncate_text(result["description"])}\n")
 
 
-def chunker(query, chunk_size):
+def chunk_text(query, chunk_size, overlap):
     words = query.split()
 
     print(f"Chunking {len(query)} characters")
@@ -169,7 +169,9 @@ def chunker(query, chunk_size):
             chunk = " ".join(chunk_words)
             print(f"{number}. {chunk}")
             number += 1
-            chunk_words = []
+
+        if overlap > 0:
+            overlap_words = chunk_words[len(chunk_words) - overlap: -1]
 
     if chunk_words:
         chunk = " ".join(chunk_words)
