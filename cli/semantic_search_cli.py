@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-from lib.semantic_search import search, verify_model, embed_query_text, embed_text, verify_embeddings
+from lib.semantic_search import search, verify_model, embed_query_text, embed_text, verify_embeddings, chunker
 
 
 def main():
@@ -31,6 +31,15 @@ def main():
     semantic_search_parser.add_argument(
         "--limit", "-l", type=int, default=5, help="Specify the maximum number of results to return (default: 5)")
 
+    chunk_parser = subparsers.add_parser(
+        "chunk", help="Excute a semantic search with chunking")
+
+    chunk_parser.add_argument(
+        "query", type=str, help="The search query to process")
+
+    chunk_parser.add_argument("--chunk-size", type=int, default=200,
+                              help="Specify the chunk size to chunk the result (default = 200)")
+
     args = parser.parse_args()
 
     match args.command:
@@ -51,6 +60,9 @@ def main():
 
         case "search":
             search(args.query, args.limit)
+
+        case "chunk":
+            chunker(args.query, args.chunk_size)
 
         case _:
             parser.print_help()

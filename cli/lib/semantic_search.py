@@ -142,7 +142,7 @@ def search(query, limit=5):
 
     documents = load_movies()
 
-    embeddings = semantic_model.load_or_create_embeddings(documents)
+    _ = semantic_model.load_or_create_embeddings(documents)
 
     output = semantic_model.search(query, limit)
 
@@ -153,3 +153,24 @@ def search(query, limit=5):
     for i, result in enumerate(output):
         print(f"{i + 1}. {result["title"]} (score: {result["score"]:.2f})")
         print(f"{truncate_text(result["description"])}\n")
+
+
+def chunker(query, chunk_size):
+    words = query.split()
+
+    print(f"Chunking {len(query)} characters")
+
+    chunk_words = []
+    number = 1
+    for _, word in enumerate(words):
+        chunk_words.append(word)
+
+        if len(chunk_words) == chunk_size:
+            chunk = " ".join(chunk_words)
+            print(f"{number}. {chunk}")
+            number += 1
+            chunk_words = []
+
+    if chunk_words:
+        chunk = " ".join(chunk_words)
+        print(f"{number}. {chunk}")
