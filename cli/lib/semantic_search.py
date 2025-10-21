@@ -161,6 +161,7 @@ def chunk_text(query, chunk_size, overlap):
     print(f"Chunking {len(query)} characters")
 
     chunk_words = []
+    chunks = []
     number = 1
     for _, word in enumerate(words):
         chunk_words.append(word)
@@ -168,11 +169,17 @@ def chunk_text(query, chunk_size, overlap):
         if len(chunk_words) == chunk_size:
             chunk = " ".join(chunk_words)
             print(f"{number}. {chunk}")
+            chunks.append(chunk)
             number += 1
 
-        if overlap > 0:
-            overlap_words = chunk_words[len(chunk_words) - overlap: -1]
+            if overlap > 0:
+                chunk_words = chunk_words[-overlap:]
+            else:
+                chunk_words = []
 
     if chunk_words:
         chunk = " ".join(chunk_words)
         print(f"{number}. {chunk}")
+        chunks.append(chunk)
+
+    return chunks
