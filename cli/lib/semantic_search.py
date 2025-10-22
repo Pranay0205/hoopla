@@ -1,4 +1,5 @@
 import os
+import re
 from sentence_transformers import SentenceTransformer
 import numpy as np
 
@@ -158,11 +159,11 @@ def search(query, limit=5):
 def chunk_text(query, chunk_size, overlap):
     words = query.split()
 
-    print(f"Chunking {len(query)} characters")
-
     chunk_words = []
     chunks = []
     number = 1
+
+    print(f"Chunking {len(query)} characters")
     for _, word in enumerate(words):
         chunk_words.append(word)
 
@@ -179,6 +180,37 @@ def chunk_text(query, chunk_size, overlap):
 
     if chunk_words:
         chunk = " ".join(chunk_words)
+        print(f"{number}. {chunk}")
+        chunks.append(chunk)
+
+    return chunks
+
+
+def semantic_chunk_text(query, max_chunk_size, overlap):
+    pattern = r"(?<=[.!?])\s+"
+    sentences = re.split(pattern, query)
+
+    chunked_sentences = []
+    chunks = []
+    number = 1
+
+    print(f"Semantically chunking {len(query)} characters")
+    for sentence in sentences:
+        chunked_sentences.append(sentence)
+
+        if len(chunked_sentences) == max_chunk_size:
+            chunk = " ".join(chunked_sentences)
+            print(f"{number}. {chunk}")
+            chunks.append(chunk)
+            number += 1
+
+            if overlap > 0:
+                chunked_sentences = chunked_sentences[-overlap:]
+            else:
+                chunked_sentences = []
+
+    if chunked_sentences:
+        chunk = " ".join(chunked_sentences)
         print(f"{number}. {chunk}")
         chunks.append(chunk)
 
