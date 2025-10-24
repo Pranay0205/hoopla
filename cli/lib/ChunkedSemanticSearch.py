@@ -29,17 +29,19 @@ class ChunkedSemanticSearch(SemanticSearch):
         all_chunks = []
         chunk_metadata: List[Dict[str, Any]] = []
 
-        for movie_idx, doc in enumerate(self.documents):
-            if not doc['description']:
+        for movie_idx, doc in enumerate(documents):
+            text = doc.get('description', '')
+            if not text.strip():
                 continue
 
             chunks = semantic_chunk_text(doc['description'],
                                          max_chunk_size=4, overlap=1)
 
             for chunk_idx, chunk in enumerate(chunks):
-                all_chunks.append(chunk)
-                chunk_metadata.append(
-                    {"movie_idx": movie_idx, "chunk_idx": chunk_idx, "total_chunks": len(chunks)})
+                if chunk and chunk.strip():
+                    all_chunks.append(chunk)
+                    chunk_metadata.append(
+                        {"movie_idx": movie_idx, "chunk_idx": chunk_idx, "total_chunks": len(chunks)})
 
         self.chunk_embeddings = self.model.encode(all_chunks)
         self.chunk_metadata = chunk_metadata
@@ -56,10 +58,8 @@ class ChunkedSemanticSearch(SemanticSearch):
     def load_or_create_chunk_embeddings(self, documents: list[dict]) -> np.ndarray:
         self.documents = documents
 
-        document_list = []
         for doc in self.documents:
             self.document_map[doc["id"]] = doc
-            document_list.append(f"{doc['title']}: {doc['description']}")
 
         if os.path.exists(self.chunk_embeddings_path) and os.path.exists(self.chunk_metadata_path):
 

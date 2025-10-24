@@ -93,7 +93,8 @@ def main():
 
             documents = load_movies()
 
-            embeddings = chunked_sem_model.load_or_create_embeddings(documents)
+            embeddings = chunked_sem_model.load_or_create_chunk_embeddings(
+                documents)
 
             print(f"Generated {len(embeddings)} chunked embeddings")
 
