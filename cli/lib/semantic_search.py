@@ -137,7 +137,7 @@ def cosine_similarity(vec1, vec2):
     return dot_product / (norm1 * norm2)
 
 
-def truncate_text(text, length=100):
+def format_search_result(text, length=100):
     return text[:length] + "..." if len(text) > length else text
 
 
@@ -156,7 +156,7 @@ def search(query, limit=5):
 
     for i, result in enumerate(output):
         print(f"{i + 1}. {result["title"]} (score: {result["score"]:.2f})")
-        print(f"{truncate_text(result["description"])}\n")
+        print(f"{format_search_result(result["description"])}\n")
 
 
 def chunk_text(query, chunk_size, overlap):

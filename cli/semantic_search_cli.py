@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-from lib.ChunkedSemanticSearch import ChunkedSemanticSearch
+from lib.ChunkedSemanticSearch import ChunkedSemanticSearch, embed_chunks, search_chunked
 from lib.search_utils import load_movies
 from lib.semantic_search import search, semantic_chunk_text, verify_model, embed_query_text, embed_text, verify_embeddings, chunk_text
 
@@ -57,8 +57,17 @@ def main():
     semantic_chunk_parser.add_argument("--overlap", type=int, default=0,
                                        help="Specify the overlap size between chunks (default = 0)")
 
-    embed_chunk_parser = subparsers.add_parser(
+    subparsers.add_parser(
         "embed_chunks", help="Embed the chunk")
+
+    search_chunked_parser = subparsers.add_parser(
+        "search_chunked", help="Search chunked embeddings")
+
+    search_chunked_parser.add_argument(
+        "query", type=str, help="The search query to process")
+
+    search_chunked_parser.add_argument(
+        "--limit", "-l", type=int, default=5, help="Specify the maximum number of results to return (default: 5)")
 
     args = parser.parse_args()
 
@@ -88,15 +97,10 @@ def main():
             semantic_chunk_text(args.query, args.max_chunk_size, args.overlap)
 
         case "embed_chunks":
+            embed_chunks()
 
-            chunked_sem_model = ChunkedSemanticSearch()
-
-            documents = load_movies()
-
-            embeddings = chunked_sem_model.load_or_create_chunk_embeddings(
-                documents)
-
-            print(f"Generated {len(embeddings)} chunked embeddings")
+        case "search_chunked":
+            search_chunked(args.query, args.limit)
 
         case _:
             parser.print_help()
