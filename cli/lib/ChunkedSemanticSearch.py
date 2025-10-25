@@ -3,9 +3,8 @@ import json
 import os
 
 import numpy as np
-from torch import chunk, embedding
-from lib.search_utils import CACHE_DIR, load_movies
-from lib.semantic_search import SemanticSearch, cosine_similarity, format_search_result, semantic_chunk_text
+from lib.search_utils import CACHE_DIR, DEFAULT_SEARCH_LIMIT, format_search_result, load_movies
+from lib.semantic_search import SemanticSearch, cosine_similarity, semantic_chunk_text
 
 
 class ChunkedSemanticSearch(SemanticSearch):
@@ -22,10 +21,9 @@ class ChunkedSemanticSearch(SemanticSearch):
     def build_chunk_embeddings(self, documents) -> np.ndarray:
         self.documents = documents
 
-        document_list = []
+        self.document_map = {}
         for doc in self.documents:
             self.document_map[doc["id"]] = doc
-            document_list.append(f"{doc['title']}: {doc['description']}")
 
         all_chunks = []
         chunk_metadata: List[Dict[str, Any]] = []
@@ -39,10 +37,9 @@ class ChunkedSemanticSearch(SemanticSearch):
                                          max_chunk_size=4, overlap=1)
 
             for chunk_idx, chunk in enumerate(chunks):
-                if chunk and chunk.strip():
-                    all_chunks.append(chunk)
-                    chunk_metadata.append(
-                        {"movie_idx": doc["id"], "chunk_idx": chunk_idx, "total_chunks": len(chunks)})
+                all_chunks.append(chunk)
+                chunk_metadata.append(
+                    {"movie_idx": movie_idx, "chunk_idx": chunk_idx, "total_chunks": len(chunks)})
 
         self.chunk_embeddings = self.model.encode(all_chunks)
         self.chunk_metadata = chunk_metadata
@@ -59,6 +56,7 @@ class ChunkedSemanticSearch(SemanticSearch):
     def load_or_create_chunk_embeddings(self, documents: list[dict]) -> np.ndarray:
         self.documents = documents
 
+        self.document_map = {}
         for doc in self.documents:
             self.document_map[doc["id"]] = doc
 
@@ -75,7 +73,7 @@ class ChunkedSemanticSearch(SemanticSearch):
 
         return self.build_chunk_embeddings(documents)
 
-    def search_chunks(self, query: str, limit: int = 10):
+    def search_chunks(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT):
 
         query_embeddings = self.generate_embedding(query)
 
@@ -99,7 +97,7 @@ class ChunkedSemanticSearch(SemanticSearch):
                  }
             )
 
-        movies_scores: dict[int, int] = {}
+        movies_scores: dict[int, float] = {}
 
         for chunk_score in chunk_scores:
             if chunk_score["movie_idx"] not in movies_scores or chunk_score["score"] > movies_scores[chunk_score["movie_idx"]]:
@@ -110,27 +108,33 @@ class ChunkedSemanticSearch(SemanticSearch):
 
         final_list = []
         for mv_score in sorted_movies_scores[:limit]:
-            movie = self.document_map[mv_score[0]].copy()
-            movie["score"] = mv_score[1]
-            movie["description"] = format_search_result(
-                movie["description"], 100)
-            final_list.append(movie)
+            movie = self.documents[mv_score[0]]
+            formatted = format_search_result(
+                doc_id=movie['id'],
+                title=movie['title'],
+                document=movie['description'],
+                score=mv_score[1]
+            )
+            final_list.append(formatted)
 
         return final_list
 
 
-def search_chunked(query, limit=5):
+def search_chunked(query: str, limit: int = DEFAULT_SEARCH_LIMIT):
     chunked_sem_model = ChunkedSemanticSearch()
 
-    document = load_movies()
+    documents = load_movies()
 
-    chunked_sem_model.load_or_create_chunk_embeddings(document)
+    chunked_sem_model.load_or_create_chunk_embeddings(documents)
 
     results = chunked_sem_model.search_chunks(query, limit)
 
-    for i, result in enumerate(results):
-        print(f"\n{i + 1}. {result['title']} (score: {result['score']:.4f})")
-        print(f"   {result['description']}")
+    print(f"Query: {query}")
+    print(f"Top {len(results)} results:\n")
+
+    for i, result in enumerate(results, 1):
+        print(f"\n{i}. {result['title']} (score: {result['score']:.4f})")
+        print(f"   {result['document']}...")
 
 
 def embed_chunks():

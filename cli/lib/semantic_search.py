@@ -1,12 +1,13 @@
 from json import load
 import os
 import re
+from typing import Any
 from sentence_transformers import SentenceTransformer
 import numpy as np
 from torch import embedding
 
 
-from lib.search_utils import CACHE_DIR, load_movies
+from lib.search_utils import CACHE_DIR, format_search_result, load_movies
 
 
 class SemanticSearch:
@@ -137,10 +138,6 @@ def cosine_similarity(vec1, vec2):
     return dot_product / (norm1 * norm2)
 
 
-def format_search_result(text, length=100):
-    return text[:length] + "..." if len(text) > length else text
-
-
 def search(query, limit=5):
     semantic_model = SemanticSearch()
 
@@ -154,9 +151,16 @@ def search(query, limit=5):
     print(f"Top {len(output)} results:")
     print()
 
-    for i, result in enumerate(output):
-        print(f"{i + 1}. {result["title"]} (score: {result["score"]:.2f})")
-        print(f"{format_search_result(result["description"])}\n")
+    for i, result in enumerate(output, 1):
+        formatted = format_search_result(
+            doc_id=result.get('id', ''),
+            title=result['title'],
+            document=result['description'],
+            score=result['score']
+        )
+        print(f"{i}. {formatted['title']} (score: {formatted['score']:.2f})")
+        print(f"   {formatted['document'][:100]}...")
+        print()
 
 
 def chunk_text(query, chunk_size, overlap):

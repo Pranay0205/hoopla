@@ -1,6 +1,7 @@
 import json
 import os
 import string
+from typing import Any
 from nltk.stem import PorterStemmer  # type: ignore
 
 DEFAULT_SEARCH_LIMIT = 5
@@ -11,6 +12,8 @@ STOPWORDS_PATH = os.path.join(PROJECT_ROOT, "data", "stopwords.txt")
 CACHE_DIR = os.path.join(PROJECT_ROOT, "cache")
 BM25_K1 = 1.5
 BM25_B = 0.75
+DOCUMENT_PREVIEW_LIMIT = 100
+DEFAULT_SEARCH_LIMIT = 5
 
 
 def load_movies() -> list[dict]:
@@ -52,3 +55,27 @@ def stop_words_remover(tokens: list[str]) -> list[str]:
             valid_tokens.append(stemmer.stem(token))
 
     return valid_tokens
+
+
+def format_search_result(
+    doc_id: str, title: str, document: str, score: float, **metadata: Any
+) -> dict[str, Any]:
+    """Create standardized search result
+
+    Args:
+        doc_id: Document ID
+        title: Document title
+        document: Display text (usually short description)
+        score: Relevance/similarity score
+        **metadata: Additional metadata to include
+
+    Returns:
+        Dictionary representation of search result
+    """
+    return {
+        "id": doc_id,
+        "title": title,
+        "document": document[:DOCUMENT_PREVIEW_LIMIT],
+        "score": round(score, 3),
+        "metadata": metadata if metadata else {},
+    }
