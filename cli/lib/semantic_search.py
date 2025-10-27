@@ -194,18 +194,29 @@ def chunk_text(query, chunk_size, overlap):
 
 
 def semantic_chunk_text(query, max_chunk_size, overlap):
+    query = query.strip()
+    if len(query) == 0:
+        return []
+
     pattern = r"(?<=[.!?])\s+"
     sentences = re.split(pattern, query)
-    sentences = [s for s in sentences if s]
 
     chunked_sentences = []
     chunks = []
 
+    if len(sentences) == 1 and not sentences[0].endswith(('.', '?', '!')):
+        chunked_sentences.append(sentences)
+        chunks.append(sentences)
+        return chunks
+
     for sentence in sentences:
-        chunked_sentences.append(sentence)
+        chunked_sentences.append(sentence.strip())
 
         if len(chunked_sentences) == max_chunk_size:
             chunk = " ".join(chunked_sentences)
+
+            if len(chunk.strip()) == 0:
+                continue
 
             chunks.append(chunk)
 

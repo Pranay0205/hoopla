@@ -94,7 +94,11 @@ def main():
             chunk_text(args.query, args.chunk_size, args.overlap)
 
         case "semantic_chunk":
-            semantic_chunk_text(args.query, args.max_chunk_size, args.overlap)
+            chunks = semantic_chunk_text(
+                args.query, args.max_chunk_size, args.overlap)
+
+            for i, chunk in enumerate(chunks, 1):
+                print(f"{i}. {chunk}")
 
         case "embed_chunks":
             embed_chunks()
