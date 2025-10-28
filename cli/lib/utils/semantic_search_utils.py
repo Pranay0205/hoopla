@@ -1,7 +1,7 @@
 
 import re
 import numpy as np
-from lib.search_utils import format_search_result, load_movies
+from lib.utils.search_utils import format_search_result, load_movies
 from lib.semantic_search import SemanticSearch
 
 

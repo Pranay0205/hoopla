@@ -4,7 +4,7 @@ import argparse
 import math
 
 from lib.inverted_index import InvertedIndex, build_command
-from lib.keyword_search_utils import (
+from lib.utils.keyword_search_utils import (
     bm25_idf_command,
     bm25_tf_command,
     bm25search,
@@ -13,7 +13,7 @@ from lib.keyword_search_utils import (
     tf_command,
     tf_idf_command,
 )
-from lib.search_utils import BM25_B, BM25_K1
+from lib.utils.search_utils import BM25_B, BM25_K1
 
 
 def main() -> None:

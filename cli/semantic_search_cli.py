@@ -2,8 +2,8 @@
 
 import argparse
 from lib.chunked_semantic_search import ChunkedSemanticSearch, embed_chunks, search_chunked
-from lib.search_utils import load_movies
-from lib.semantic_search_utils import verify_model, search, semantic_chunk_text, embed_query_text, embed_text, verify_embeddings, chunk_text
+from lib.utils.search_utils import load_movies
+from lib.utils.semantic_search_utils import verify_model, search, semantic_chunk_text, embed_query_text, embed_text, verify_embeddings, chunk_text
 
 
 def main():
