@@ -3,8 +3,10 @@ import json
 import os
 
 import numpy as np
-from lib.search_utils import CACHE_DIR, DEFAULT_SEARCH_LIMIT, format_search_result, load_movies
-from lib.semantic_search import SemanticSearch, cosine_similarity, semantic_chunk_text
+
+from lib.semantic_search import SemanticSearch
+from lib.utils.search_utils import CACHE_DIR, DEFAULT_SEARCH_LIMIT, format_search_result, load_movies
+from lib.utils.semantic_search_utils import cosine_similarity, semantic_chunk_text
 
 
 class ChunkedSemanticSearch(SemanticSearch):

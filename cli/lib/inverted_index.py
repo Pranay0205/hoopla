@@ -6,7 +6,7 @@ import pickle
 from textwrap import indent
 import token
 from typing import Counter
-from lib.search_utils import BM25_B, BM25_K1, stop_words_remover, tokenizer, CACHE_DIR, load_movies
+from lib.utils.search_utils import BM25_B, BM25_K1, stop_words_remover, tokenizer, CACHE_DIR, load_movies
 
 
 class InvertedIndex:
