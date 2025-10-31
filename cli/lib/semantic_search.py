@@ -5,7 +5,7 @@ import numpy as np
 
 from lib.utils.constants import CACHE_DIR
 from lib.utils.search_utils import format_search_result
-from lib.utils.semantic_search_utils import cosine_similarity
+from lib.utils.math_utils import cosine_similarity
 
 
 class SemanticSearch:

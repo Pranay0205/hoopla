@@ -26,7 +26,8 @@ class HybridSearch:
     def weighted_search(self, query, alpha, limit=5):
         bm25_results = self._bm25_search(query, limit * 500)
 
-        semantic_results = self.semantic_search.search(query, limit * 500)
+        semantic_results = self.semantic_search.search_chunks(
+            query, limit * 500)
 
         bm25_scores = [x["score"] for x in bm25_results]
 
