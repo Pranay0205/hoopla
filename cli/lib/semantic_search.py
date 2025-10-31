@@ -1,12 +1,10 @@
-from json import load
+
 import os
-import re
-from typing import Any
 from sentence_transformers import SentenceTransformer
 import numpy as np
-from torch import embedding
 
-from lib.utils.search_utils import CACHE_DIR
+from lib.utils.constants import CACHE_DIR
+from lib.utils.search_utils import format_search_result
 from lib.utils.semantic_search_utils import cosine_similarity
 
 
@@ -60,7 +58,7 @@ class SemanticSearch:
 
         return embeddings[0]
 
-    def search(self, query, limit):
+    def search(self, query: str, limit: int) -> list:
 
         if self.embeddings is None or len(self.embeddings) == 0:
             raise ValueError(
@@ -81,10 +79,12 @@ class SemanticSearch:
 
         output = []
         for i, (score, doc) in enumerate(results[:limit]):
-            output.append({
-                "score": score,
-                "title": doc["title"],
-                "description": doc["description"]
-            })
+            formatted_result = format_search_result(
+                doc_id=doc["id"],
+                title=doc["title"],
+                document=doc["description"],
+                score=score
+            )
+            output.append(formatted_result)
 
         return output

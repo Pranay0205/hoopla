@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 import argparse
-import math
-
-from lib.inverted_index import InvertedIndex, build_command
+from lib.inverted_index import build_command
+from lib.utils.constants import BM25_B, BM25_K1
 from lib.utils.keyword_search_utils import (
     bm25_idf_command,
     bm25_tf_command,
@@ -13,7 +12,6 @@ from lib.utils.keyword_search_utils import (
     tf_command,
     tf_idf_command,
 )
-from lib.utils.search_utils import BM25_B, BM25_K1
 
 
 def main() -> None:
@@ -140,7 +138,13 @@ def main() -> None:
 
         case "bm25search":
             try:
-                bm25search(args.query, args.limit)
+                print("Searching for:", args.query)
+
+                results = bm25search(args.query, args.limit)
+
+                for i, res in enumerate(results, 1):
+                    print(
+                        f"{i}. ({res['id']}) {res['title']} - Score: {res['score']:.2f}")
 
             except FileNotFoundError as e:
                 print(f"Error: {e}")

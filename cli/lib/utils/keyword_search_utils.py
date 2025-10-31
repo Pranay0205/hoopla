@@ -1,8 +1,9 @@
 import re
 
 from lib.inverted_index import InvertedIndex
-from lib.utils.search_utils import (
-    DEFAULT_SEARCH_LIMIT,  BM25_B, BM25_K1, stop_words_remover, tokenizer)
+from lib.utils.constants import BM25_B, BM25_K1, DEFAULT_SEARCH_LIMIT
+
+from lib.utils.search_utils import stop_words_remover, tokenizer
 
 
 def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:

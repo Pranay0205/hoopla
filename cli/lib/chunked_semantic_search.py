@@ -5,7 +5,8 @@ import os
 import numpy as np
 
 from lib.semantic_search import SemanticSearch
-from lib.utils.search_utils import CACHE_DIR, DEFAULT_SEARCH_LIMIT, format_search_result, load_movies
+from lib.utils.constants import CACHE_DIR, DEFAULT_SEARCH_LIMIT
+from lib.utils.search_utils import format_search_result, load_movies
 from lib.utils.semantic_search_utils import cosine_similarity, semantic_chunk_text
 
 

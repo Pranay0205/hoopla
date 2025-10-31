@@ -14,3 +14,7 @@ def normalize_scores(scores: list[float]) -> list[float]:
         normalized_scores.append((s - min_score) / (max_score - min_score))
 
     return normalized_scores
+
+
+def hybrid_score(bm25_score, semantic_score, alpha=0.5):
+    return alpha * bm25_score + (1 - alpha) * semantic_score

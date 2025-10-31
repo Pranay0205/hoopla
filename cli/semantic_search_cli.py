@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import argparse
-from lib.chunked_semantic_search import ChunkedSemanticSearch, embed_chunks, search_chunked
+from lib.chunked_semantic_search import embed_chunks, search_chunked
+from lib.utils.constants import DOCUMENT_PREVIEW_LIMIT
 from lib.utils.search_utils import load_movies
 from lib.utils.semantic_search_utils import verify_model, search, semantic_chunk_text, embed_query_text, embed_text, verify_embeddings, chunk_text
 
@@ -89,7 +90,12 @@ def main():
             embed_query_text(args.query)
 
         case "search":
-            search(args.query, args.limit)
+            results = search(args.query, args.limit)
+            for i, res in enumerate(results):
+                print(
+                    f"{i}. {res['title']} (score: {res['score']:.2f})")
+                print(f"   {res['document'][:DOCUMENT_PREVIEW_LIMIT]}...")
+                print()
 
         case "chunk":
             chunk_text(args.query, args.chunk_size, args.overlap)

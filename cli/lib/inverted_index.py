@@ -6,7 +6,8 @@ import pickle
 from textwrap import indent
 import token
 from typing import Counter
-from lib.utils.search_utils import BM25_B, BM25_K1, stop_words_remover, tokenizer, CACHE_DIR, load_movies
+from lib.utils.constants import CACHE_DIR, BM25_B, BM25_K1, DEFAULT_SEARCH_LIMIT
+from lib.utils.search_utils import format_search_result, stop_words_remover, tokenizer, load_movies
 
 
 class InvertedIndex:
@@ -189,26 +190,30 @@ class InvertedIndex:
 
         return bm25_tf * bm25_idf
 
-    def bm25_search(self, query: str, limit: int):
-        terms = tokenizer(query)
-        terms = stop_words_remover(terms)
-        bm25_scores: dict[int, float] = {}
+    def bm25_search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:
+        query_tokens = tokenizer(query)
 
-        for term in terms:
-            for doc_id in self.index[term]:
-                if doc_id not in bm25_scores:
-                    bm25_scores[doc_id] = self.bm25(doc_id, term)
-                else:
-                    bm25_scores[doc_id] += self.bm25(doc_id, term)
+        scores = {}
+        for doc_id in self.docmap:
+            score = 0.0
+            for token in query_tokens:
+                score += self.bm25(doc_id, token)
+            scores[doc_id] = score
 
-        sorted_bm25_score = sorted(bm25_scores.items(),
-                                   key=lambda item: item[1], reverse=True)
+        sorted_docs = sorted(scores.items(), key=lambda x: x[1], reverse=True)
 
-        for i, item in enumerate(sorted_bm25_score):
-            if i < limit:
-                document = self.docmap[item[0]]
-                print(
-                    f"{i + 1}. ({document["id"]}) {document["title"]} - Score: {item[1]:.2f}")
+        results = []
+        for doc_id, score in sorted_docs[:limit]:
+            doc = self.docmap[doc_id]
+            formatted_result = format_search_result(
+                doc_id=doc["id"],
+                title=doc["title"],
+                document=doc["description"],
+                score=score,
+            )
+            results.append(formatted_result)
+
+        return results
 
 
 def build_command() -> None:

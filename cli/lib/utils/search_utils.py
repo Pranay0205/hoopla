@@ -1,19 +1,9 @@
 import json
-import os
 import string
 from typing import Any
-from nltk.stem import PorterStemmer  # type: ignore
+from nltk.stem import PorterStemmer
 
-DEFAULT_SEARCH_LIMIT = 5
-
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-DATA_PATH = os.path.join(PROJECT_ROOT, "data", "movies.json")
-STOPWORDS_PATH = os.path.join(PROJECT_ROOT, "data", "stopwords.txt")
-CACHE_DIR = os.path.join(PROJECT_ROOT, "cache")
-BM25_K1 = 1.5
-BM25_B = 0.75
-DOCUMENT_PREVIEW_LIMIT = 100
-DEFAULT_SEARCH_LIMIT = 5
+from lib.utils.constants import DATA_PATH, DOCUMENT_PREVIEW_LIMIT, STOPWORDS_PATH
 
 
 def load_movies() -> list[dict]:

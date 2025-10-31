@@ -1,6 +1,7 @@
 
 import re
 import numpy as np
+from lib.utils.constants import DEFAULT_SEARCH_LIMIT
 from lib.utils.search_utils import format_search_result, load_movies
 from lib.semantic_search import SemanticSearch
 
@@ -53,29 +54,31 @@ def cosine_similarity(vec1, vec2):
     return dot_product / (norm1 * norm2)
 
 
-def search(query, limit=5):
+def search(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list:
     semantic_model = SemanticSearch()
 
     documents = load_movies()
 
     _ = semantic_model.load_or_create_embeddings(documents)
 
-    output = semantic_model.search(query, limit)
+    semantic_output = semantic_model.search(query, limit)
 
     print(f"Query: {query}")
-    print(f"Top {len(output)} results:")
+    print(f"Top {len(semantic_output)} results:")
     print()
 
-    for i, result in enumerate(output, 1):
+    results = []
+    for result in semantic_output:
         formatted = format_search_result(
             doc_id=result.get('id', ''),
             title=result['title'],
             document=result['description'],
             score=result['score']
         )
-        print(f"{i}. {formatted['title']} (score: {formatted['score']:.2f})")
-        print(f"   {formatted['document'][:100]}...")
-        print()
+
+        results.append(formatted)
+
+    return results
 
 
 def chunk_text(query, chunk_size, overlap):
