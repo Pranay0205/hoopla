@@ -15,3 +15,7 @@ wheels/
 # Project Folders
 /data
 /cache
+
+
+# Config Files
+.env

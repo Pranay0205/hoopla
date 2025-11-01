@@ -3,6 +3,7 @@ import argparse
 from lib.hybrid_search import get_hybrid_search
 from lib.utils.constants import DEFAULT_K, DEFAULT_SEARCH_LIMIT, DEFAULT_WEIGHT
 from lib.utils.hybrid_search_utils import normalize_scores
+from lib.utils.spell_checker_gen_ai import query_enhancer
 
 
 def main() -> None:
@@ -28,17 +29,20 @@ def main() -> None:
     weighted_search.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT,
                                  help="Limits the search results to set value")
 
-    rrf_search = subparsers.add_parser(
+    rrf_parser = subparsers.add_parser(
         "rrf-search", help="Search content using Reciprocal Rank Fusion")
 
-    rrf_search.add_argument(
+    rrf_parser.add_argument(
         "query", type=str, help="Query that needs to be searched")
 
-    rrf_search.add_argument("--k", type=int, default=DEFAULT_K,
+    rrf_parser.add_argument("--k", type=int, default=DEFAULT_K,
                             help="K controls how much more weight we give to higher-ranked results vs. lower-ranked ones")
 
-    rrf_search.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT,
+    rrf_parser.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT,
                             help="Limits the search results to set value")
+
+    rrf_parser.add_argument("--enhance", type=str,
+                            choices=["spell", "rewrite", "expand"], help="Query enhancement method")
 
     args = parser.parse_args()
 
@@ -68,7 +72,16 @@ def main() -> None:
         case "rrf-search":
             hybrid_search = get_hybrid_search()
 
-            results = hybrid_search.rrf_search(args.query, args.k, args.limit)
+            enhanced_query = query_enhancer(args.enhance, args.query)
+
+            print(
+                f"Enhanced query ({args.enhance}): '{args.query}' -> {enhanced_query}\n")
+
+            if not enhanced_query:
+                raise ValueError("Failed to enhance the query")
+
+            results = hybrid_search.rrf_search(
+                enhanced_query, args.k, args.limit)
 
             for i, result in enumerate(results, 1):
                 print(f"{i}. {result['title']}")
