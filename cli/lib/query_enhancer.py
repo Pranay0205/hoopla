@@ -69,4 +69,7 @@ def query_enhancer(method: str, query: str) -> str | None:
 
     response = client.models.generate_content(model=model, contents=prompt)
 
-    return response.text
+    if response.text:
+        enhanced_query = response.text.strip()
+
+    return enhanced_query

@@ -1,9 +1,10 @@
 import argparse
 
 from lib.hybrid_search import get_hybrid_search
+from lib.llm_reranker import rerank_results
 from lib.utils.constants import DEFAULT_K, DEFAULT_SEARCH_LIMIT, DEFAULT_WEIGHT
 from lib.utils.hybrid_search_utils import normalize_scores
-from lib.utils.spell_checker_gen_ai import query_enhancer
+from lib.query_enhancer import query_enhancer
 
 
 def main() -> None:
@@ -42,7 +43,10 @@ def main() -> None:
                             help="Limits the search results to set value")
 
     rrf_parser.add_argument("--enhance", type=str,
-                            choices=["spell", "rewrite", "expand"], help="Query enhancement method")
+                            choices=["spell", "rewrite", "expand"], default="spell", help="Query enhancement method")
+
+    rrf_parser.add_argument("--rerank-method", type=str,
+                            choices=["individual"], default="individual", help="Query re rank method")
 
     args = parser.parse_args()
 
@@ -83,11 +87,19 @@ def main() -> None:
             results = hybrid_search.rrf_search(
                 enhanced_query, args.k, args.limit)
 
+            if args.rerank_method == "individual":
+                results = rerank_results(enhanced_query, results)
+
+            print(
+                f"Reranking top {len(results)} results using {args.rerank_method} method...")
+            print(
+                f"Reciprocal Rank Fusion Results for '{enhanced_query}' (k={args.k})")
             for i, result in enumerate(results, 1):
                 print(f"{i}. {result['title']}")
-                print(f"\t\tRRF Score: {result["rrf_score"]:.3f}")
+                print(f"\t\tRerank Score: {result['re_rank_score']:.3f}/10")
+                print(f"\t\tRRF Score: {result['rrf_score']:.3f}")
                 print(
-                    f"\t\tBM25 Rank: {result["bm25_rank"]}, Semantic Rank: {result["semantic_rank"]}")
+                    f"\t\tBM25 Rank: {result['bm25_rank']}, Semantic Rank: {result['semantic_rank']}")
                 print(f"\t\t{result['document']}")
                 print()
 
