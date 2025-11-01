@@ -10,3 +10,7 @@ def cosine_similarity(vec1, vec2):
         return 0.0
 
     return dot_product / (norm1 * norm2)
+
+
+def rrf_score(rank, k=60):
+    return 1 / (k + rank)
