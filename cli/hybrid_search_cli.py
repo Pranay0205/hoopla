@@ -1,8 +1,8 @@
 import argparse
 
 from lib.hybrid_search import get_hybrid_search
-from lib.llm_reranker import rerank_results
-from lib.utils.constants import DEFAULT_K, DEFAULT_SEARCH_LIMIT, DEFAULT_WEIGHT
+from lib.llm_reranker import llm_rerank_batch, llm_rerank_individual, re_rank
+from lib.utils.constants import DEFAULT_K, DEFAULT_SEARCH_LIMIT, DEFAULT_WEIGHT, SEARCH_LIMIT_MULTIPLIER
 from lib.utils.hybrid_search_utils import normalize_scores
 from lib.query_enhancer import query_enhancer
 
@@ -46,7 +46,7 @@ def main() -> None:
                             choices=["spell", "rewrite", "expand"], default="spell", help="Query enhancement method")
 
     rrf_parser.add_argument("--rerank-method", type=str,
-                            choices=["individual"], default="individual", help="Query re rank method")
+                            choices=["individual", "batch"], default="individual", help="Query re rank method")
 
     args = parser.parse_args()
 
@@ -84,11 +84,15 @@ def main() -> None:
             if not enhanced_query:
                 raise ValueError("Failed to enhance the query")
 
-            results = hybrid_search.rrf_search(
-                enhanced_query, args.k, args.limit)
+            if args.rerank_method:
+                results = hybrid_search.rrf_search(
+                    enhanced_query, args.k, args.limit * SEARCH_LIMIT_MULTIPLIER)
+            else:
+                results = hybrid_search.rrf_search(
+                    enhanced_query, args.k, args.limit)
 
-            if args.rerank_method == "individual":
-                results = rerank_results(enhanced_query, results)
+            results = re_rank(enhanced_query, results,
+                              args.rerank_method, args.limit)
 
             print(
                 f"Reranking top {len(results)} results using {args.rerank_method} method...")
