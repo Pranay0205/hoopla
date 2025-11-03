@@ -46,7 +46,7 @@ def main() -> None:
                             choices=["spell", "rewrite", "expand"], default="spell", help="Query enhancement method")
 
     rrf_parser.add_argument("--rerank-method", type=str,
-                            choices=["individual", "batch"], default="individual", help="Query re rank method")
+                            choices=["individual", "batch", "cross_encoder"], default="individual", help="Query re rank method")
 
     args = parser.parse_args()
 
@@ -100,7 +100,9 @@ def main() -> None:
                 f"Reciprocal Rank Fusion Results for '{enhanced_query}' (k={args.k})")
             for i, result in enumerate(results, 1):
                 print(f"{i}. {result['title']}")
-                print(f"\t\tRerank Score: {result['re_rank_score']:.3f}/10")
+                print(
+                    f"\t\tCross Encoder Score: {result['cross_encoder_score']:.3f}/10")
+                # print(f"\t\tRerank Score: {result['re_rank_score']:.3f}/10")
                 print(f"\t\tRRF Score: {result['rrf_score']:.3f}")
                 print(
                     f"\t\tBM25 Rank: {result['bm25_rank']}, Semantic Rank: {result['semantic_rank']}")

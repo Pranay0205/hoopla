@@ -4,10 +4,9 @@ import time
 
 from dotenv import load_dotenv  # type: ignore
 from google import genai
-from torch import Value
 
 from lib.utils.constants import DEFAULT_SEARCH_LIMIT
-
+from sentence_transformers import CrossEncoder
 
 load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
@@ -15,9 +14,9 @@ client = genai.Client(api_key=api_key)
 model = "gemini-2.0-flash-001"
 
 
-def llm_rerank_individual(query: str, results: list, limit) -> list:
+def llm_rerank_individual(query: str, documents: list, limit) -> list:
 
-    for doc in results:
+    for doc in documents:
         prompt = f"""Rate how well this movie matches the search query.
 
                   Query: "{query}"
@@ -44,16 +43,16 @@ def llm_rerank_individual(query: str, results: list, limit) -> list:
         time.sleep(3)
 
         sorted_results = sorted(
-            results, key=lambda x: x.get("re_rank_score", 0), reverse=True)
+            documents, key=lambda x: x.get("re_rank_score", 0), reverse=True)
 
     return sorted_results[:limit]
 
 
-def llm_rerank_batch(query: str, results: list, limit: int) -> list:
+def llm_rerank_batch(query: str, documents: list, limit: int) -> list:
 
-    id_to_movie = {result["id"]: result for result in results}
+    id_to_movie = {result["id"]: result for result in documents}
     movies = [
-        f"Id: {r["id"]}, Title: {r["title"]}, Document:{r["document"]}" for r in results]
+        f"Id: {r["id"]}, Title: {r["title"]}, Document:{r["document"]}" for r in documents]
 
     doc_list_str = "\n".join(movies)
 
@@ -85,14 +84,38 @@ def llm_rerank_batch(query: str, results: list, limit: int) -> list:
     return sorted_results[:limit]
 
 
-def re_rank(query: str, document: list[dict], method: str = "batch", limit: int = DEFAULT_SEARCH_LIMIT):
+def llm_rerank_cross_encoder(query: str, documents: list[dict], limit: int) -> list:
+
+    pairs = []
+    for doc in documents:
+        pairs.append(
+            [query, f"{doc.get('title', '')} - {doc.get('document', '')}"])
+
+    cross_encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L2-v2")
+
+    # scores is a list of numbers, one for each pair
+    scores = cross_encoder.predict(pairs)
+
+    for doc, score in zip(documents, scores):
+
+        doc["cross_encoder_score"] = score
+
+    sorted_documents = sorted(
+        documents, key=lambda x: x["cross_encoder_score"], reverse=True)
+
+    return sorted_documents[:limit]
+
+
+def re_rank(query: str, documents: list[dict], method: str = "batch", limit: int = DEFAULT_SEARCH_LIMIT):
 
     results = []
     match method:
         case "individually":
-            results = llm_rerank_individual(query, document, limit)
+            results = llm_rerank_individual(query, documents, limit)
         case "batch":
-            results = llm_rerank_batch(query, document, limit)
+            results = llm_rerank_batch(query, documents, limit)
+        case "cross_encoder":
+            results = llm_rerank_cross_encoder(query, documents, limit)
         case _:
             raise ValueError("unknown method used")
 
