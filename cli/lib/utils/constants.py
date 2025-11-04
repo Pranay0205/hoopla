@@ -5,6 +5,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.dirname(__file__))))
 print(f"Project Root Folder: {PROJECT_ROOT}")
 DATA_PATH = os.path.join(PROJECT_ROOT, "data", "movies.json")
+GOLDEN_DATASET_PATH = os.path.join(PROJECT_ROOT, "data", "golden_dataset.json")
 STOPWORDS_PATH = os.path.join(PROJECT_ROOT, "data", "stopwords.txt")
 CACHE_DIR = os.path.join(PROJECT_ROOT, "cache")
 BM25_K1 = 1.5
