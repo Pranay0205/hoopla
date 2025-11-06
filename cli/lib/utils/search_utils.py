@@ -3,13 +3,18 @@ import string
 from typing import Any
 from nltk.stem import PorterStemmer
 
-from lib.utils.constants import DATA_PATH, DOCUMENT_PREVIEW_LIMIT, STOPWORDS_PATH
+from lib.utils.constants import DATA_PATH, DOCUMENT_PREVIEW_LIMIT, GOLDEN_DATASET_PATH, STOPWORDS_PATH
 
 
 def load_movies() -> list[dict]:
     with open(DATA_PATH, "r") as f:
         data = json.load(f)
     return data["movies"]
+
+
+def load_golden_dataset() -> dict:
+    with open(GOLDEN_DATASET_PATH, "r") as f:
+        return json.load(f)
 
 
 def load_stopwords() -> list[str]:
