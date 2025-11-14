@@ -28,81 +28,126 @@ class HybridSearch:
 
     def weighted_search(self, query, alpha, limit=5):
         bm25_results = self._bm25_search(query, limit * 500)
-
         semantic_results = self.semantic_search.search_chunks(
             query, limit * 500)
 
+        # Normalize scores
         bm25_scores = [x["score"] for x in bm25_results]
-
         normalized_bm25_scores = normalize_scores(bm25_scores)
 
         semantic_scores = [x["score"] for x in semantic_results]
-
         normalized_semantic_scores = normalize_scores(semantic_scores)
 
-        documents = {}
+        # Build combined scores dictionary
+        combined_scores = {}
 
+        # Process BM25 results - take MAX normalized score for duplicates
         for i, res in enumerate(bm25_results):
-            documents[res["id"]] = {**res}
-            documents[res["id"]]["keyword_score"] = normalized_bm25_scores[i]
-            documents[res["id"]]["semantic_score"] = 0.0
+            doc_id = res["id"]
+            if doc_id not in combined_scores:
+                combined_scores[doc_id] = {
+                    "title": res["title"],
+                    "document": res["document"],
+                    "bm25_score": 0.0,
+                    "semantic_score": 0.0,
+                }
+            # Take maximum score if document appears multiple times
+            if normalized_bm25_scores[i] > combined_scores[doc_id]["bm25_score"]:
+                combined_scores[doc_id]["bm25_score"] = normalized_bm25_scores[i]
 
+        # Process semantic results - take MAX normalized score for duplicates
         for i, res in enumerate(semantic_results):
-            if res["id"] in documents:
-                documents[res["id"]
-                          ]["semantic_score"] = normalized_semantic_scores[i]
-            else:
+            doc_id = res["id"]
+            if doc_id not in combined_scores:
+                combined_scores[doc_id] = {
+                    "title": res["title"],
+                    "document": res["document"],
+                    "bm25_score": 0.0,
+                    "semantic_score": 0.0,
+                }
+            # Take maximum score if document appears multiple times
+            if normalized_semantic_scores[i] > combined_scores[doc_id]["semantic_score"]:
+                combined_scores[doc_id]["semantic_score"] = normalized_semantic_scores[i]
 
-                documents[res["id"]] = {**res}
-                documents[res["id"]]["keyword_score"] = 0.0
-                documents[res["id"]
-                          ]["semantic_score"] = normalized_semantic_scores[i]
+        # Calculate hybrid scores
+        hybrid_results = []
+        for doc_id, data in combined_scores.items():
+            score_value = hybrid_score(
+                data["bm25_score"], data["semantic_score"], alpha)
+            result = {
+                "id": doc_id,
+                "title": data["title"],
+                "document": data["document"],
+                "score": score_value,  # Final hybrid score
+                "bm25_score": data["bm25_score"],
+                "semantic_score": data["semantic_score"],
+            }
+            hybrid_results.append(result)
 
-        for doc_id in documents:
-            kw_score = documents[doc_id]["keyword_score"]
-            sem_score = documents[doc_id]["semantic_score"]
-            documents[doc_id]["hybrid_score"] = hybrid_score(
-                kw_score, sem_score, alpha)
-
+        # Sort by hybrid score and return top results
         sorted_results = sorted(
-            documents.values(), key=lambda x: x["hybrid_score"], reverse=True)
+            hybrid_results, key=lambda x: x["score"], reverse=True)
         return sorted_results[:limit]
 
     def rrf_search(self, query: str, k: int, limit: int = DEFAULT_SEARCH_LIMIT):
         bm25_results = self._bm25_search(query, limit * 500)
-
         semantic_results = self.semantic_search.search_chunks(
             query, limit * 500)
 
-        documents = {}
+        rrf_scores = {}
 
-        for i, res in enumerate(bm25_results):
-            documents[res["id"]] = {**res}
-            documents[res["id"]]["bm25_rank"] = i
-            documents[res["id"]]["semantic_rank"] = float("inf")
+        # Process BM25 results - only set rank once per document
+        for rank, res in enumerate(bm25_results, start=1):
+            doc_id = res["id"]
+            if doc_id not in rrf_scores:
+                rrf_scores[doc_id] = {
+                    "title": res["title"],
+                    "document": res["document"],
+                    "rrf_score": 0.0,
+                    "bm25_rank": None,
+                    "semantic_rank": None,
+                }
+            # Only set rank if not already set (first occurrence)
+            if rrf_scores[doc_id]["bm25_rank"] is None:
+                rrf_scores[doc_id]["bm25_rank"] = rank
+                rrf_scores[doc_id]["rrf_score"] += rrf_score(rank, k)
 
-        for i, res in enumerate(semantic_results):
-            if res["id"] in documents:
-                documents[res["id"]]["semantic_rank"] = i
-            else:
-                documents[res["id"]] = {**res}
-                documents[res["id"]]["semantic_rank"] = i
-                documents[res["id"]]["bm25_rank"] = float("inf")
+        # Process semantic results - only set rank once per document
+        for rank, res in enumerate(semantic_results, start=1):
+            doc_id = res["id"]
+            if doc_id not in rrf_scores:
+                rrf_scores[doc_id] = {
+                    "title": res["title"],
+                    "document": res["document"],
+                    "rrf_score": 0.0,
+                    "bm25_rank": None,
+                    "semantic_rank": None,
+                }
+            # Only set rank if not already set (first occurrence)
+            if rrf_scores[doc_id]["semantic_rank"] is None:
+                rrf_scores[doc_id]["semantic_rank"] = rank
+                rrf_scores[doc_id]["rrf_score"] += rrf_score(rank, k)
 
-        for doc_id in documents:
-            rrf_kw_score = rrf_score(documents[doc_id]["bm25_rank"], k)
-            rrf_semantic_score = rrf_score(
-                documents[doc_id]["semantic_rank"], k)
+        # Build final results
+        rrf_results = []
+        for doc_id, data in rrf_scores.items():
+            result = {
+                "id": doc_id,
+                "title": data["title"],
+                "document": data["document"],
+                "score": data["rrf_score"],  # Final RRF score
+                "rrf_score": data["rrf_score"],
+                "bm25_rank": data["bm25_rank"],
+                "semantic_rank": data["semantic_rank"],
+            }
+            rrf_results.append(result)
 
-            documents[doc_id]["rrf_score"] = rrf_kw_score + rrf_semantic_score
-
+        # Sort by RRF score and return top results
         sorted_results = sorted(
-            documents.values(), key=lambda x: x["rrf_score"], reverse=True)
-
+            rrf_results, key=lambda x: x["score"], reverse=True)
         return sorted_results[:limit]
 
 
 def get_hybrid_search() -> HybridSearch:
     documents = load_movies()
-
     return HybridSearch(documents)
