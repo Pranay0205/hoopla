@@ -18,14 +18,12 @@ def precision_at_k(retrieved_docs: list[str], relevant_docs: set[str], k: int = 
     return relevant_count / k
 
 
-def recall_at_k(retrieved_docs: list[str], relevant_docs: set[str], k: int = 5
-                ) -> float:
+def recall_at_k(retrieved_docs: list[str], relevant_docs: set[str], k: int = 5) -> float:
     top_k = retrieved_docs[:k]
-    relevant_count = len(set(top_k) & relevant_docs)
-
-    if len(relevant_docs) == 0:
-        return 0.0
-
+    relevant_count = 0
+    for doc in top_k:
+        if doc in relevant_docs:
+            relevant_count += 1
     return relevant_count / len(relevant_docs)
 
 
