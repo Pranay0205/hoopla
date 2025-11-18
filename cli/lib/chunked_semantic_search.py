@@ -48,6 +48,9 @@ class ChunkedSemanticSearch(SemanticSearch):
         self.chunk_embeddings = self.model.encode(all_chunks)
         self.chunk_metadata = chunk_metadata
 
+        print(f"Built chunk_embeddings f{self.chunk_embeddings.shape}")
+        print(f"Built chunk_metadata f{self.chunk_metadata[:2]}...")
+
         with open(self.chunk_embeddings_path, "wb") as f:
             np.save(f, self.chunk_embeddings)
 
@@ -75,6 +78,8 @@ class ChunkedSemanticSearch(SemanticSearch):
 
             return self.chunk_embeddings
 
+        print("Chunk embeddings not found. Building new chunk embeddings...")
+
         return self.build_chunk_embeddings(documents)
 
     def search_chunks(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT):
@@ -94,12 +99,15 @@ class ChunkedSemanticSearch(SemanticSearch):
         for i, chunk_embedding in enumerate(self.chunk_embeddings):
             similarity_score = cosine_similarity(
                 chunk_embedding, query_embeddings)
+
             chunk_scores.append(
                 {"chunk_idx": self.chunk_metadata[i]["chunk_idx"],
                  "movie_idx": self.chunk_metadata[i]["movie_idx"],
                  "score": similarity_score
                  }
             )
+
+        print(f"Computed similarity scores for {len(chunk_scores)} chunks.")
 
         movies_scores: dict[int, float] = {}
 

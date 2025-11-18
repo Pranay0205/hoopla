@@ -117,6 +117,7 @@ def main() -> None:
             try:
 
                 bm25idf = bm25_idf_command(args.term)
+
                 print(f"BM25 IDF score of '{args.term}': {bm25idf:.2f}")
 
             except FileNotFoundError as e:

@@ -39,6 +39,7 @@ class HybridSearch:
             query, limit * 500)
 
         fused = reciprocal_rank_fusion(bm25_results, semantic_results, k)
+        print(f"Total fused results: {len(fused)}")
         return fused[:limit]
 
 

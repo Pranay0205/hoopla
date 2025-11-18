@@ -20,7 +20,7 @@ def precision_at_k(retrieved_docs: list[str], relevant_docs: set[str], k: int = 
 
 def evaluate_f1_score(precision: float, recall: float) -> float:
 
-    return 2 * (precision * recall) / precision + recall
+    return 2 * (precision * recall) / (precision + recall)
 
 
 def recall_at_k(retrieved_docs: list[str], relevant_docs: set[str], k: int = 5) -> float:
@@ -57,6 +57,9 @@ def evaluate_command(limit: int = DEFAULT_SEARCH_LIMIT) -> dict:
         precision = precision_at_k(retrived_docs, relevant_docs, limit)
         recall = recall_at_k(retrived_docs, relevant_docs, limit)
         f1_score = evaluate_f1_score(precision, recall)
+
+        print(
+            f" Scores Of The Results Based On Query: {query} | Precision: {precision:.4f} | Recall: {recall:.4f} | F1-Score: {f1_score:.4f}")
 
         results_by_query[query] = {
             "precision": precision,

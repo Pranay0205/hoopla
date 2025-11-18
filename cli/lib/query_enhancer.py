@@ -20,7 +20,6 @@ def query_enhancer(method: str, query: str) -> str | None:
 
     match method:
         case "spell":
-
             prompt = f"""Fix any spelling errors in this movie search query.
 
                           Only correct obvious typos. Don't change correctly spelled words.
@@ -71,5 +70,7 @@ def query_enhancer(method: str, query: str) -> str | None:
 
     if response.text:
         enhanced_query = response.text.strip()
+
+    print(f"Enhanced query: {enhanced_query}")
 
     return enhanced_query

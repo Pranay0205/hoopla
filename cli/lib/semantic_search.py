@@ -56,6 +56,9 @@ class SemanticSearch:
 
         embeddings = self.model.encode([text])
 
+        print(
+            f"Generated embedding for text: {text[:30]}... -> {embeddings[0][:5]}...")
+
         return embeddings[0]
 
     def search(self, query: str, limit: int) -> list:

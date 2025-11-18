@@ -192,7 +192,9 @@ class InvertedIndex:
 
     def bm25_search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:
         query_tokens = tokenizer(query)
+        query_tokens = stop_words_remover(query_tokens)
 
+        print(f"Query Tokens after stopword removal: {query_tokens}")
         scores = {}
         for doc_id in self.docmap:
             score = 0.0
