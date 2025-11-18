@@ -18,6 +18,11 @@ def precision_at_k(retrieved_docs: list[str], relevant_docs: set[str], k: int = 
     return relevant_count / k
 
 
+def evaluate_f1_score(precision: float, recall: float) -> float:
+
+    return 2 * (precision * recall) / precision + recall
+
+
 def recall_at_k(retrieved_docs: list[str], relevant_docs: set[str], k: int = 5) -> float:
     top_k = retrieved_docs[:k]
     relevant_count = 0
@@ -51,10 +56,12 @@ def evaluate_command(limit: int = DEFAULT_SEARCH_LIMIT) -> dict:
 
         precision = precision_at_k(retrived_docs, relevant_docs, limit)
         recall = recall_at_k(retrived_docs, relevant_docs, limit)
+        f1_score = evaluate_f1_score(precision, recall)
 
         results_by_query[query] = {
             "precision": precision,
             "recall": recall,
+            "f1_score": f1_score,
             "retrieved": retrived_docs[:limit],
             "relevant": list(relevant_docs)
         }
@@ -65,4 +72,5 @@ def evaluate_command(limit: int = DEFAULT_SEARCH_LIMIT) -> dict:
         "test_cases_count": len(test_cases),
         "limit": limit,
         "results": results_by_query,
+        "total_precision": total_precision
     }
