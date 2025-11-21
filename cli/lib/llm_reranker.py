@@ -5,13 +5,13 @@ import time
 from dotenv import load_dotenv  # type: ignore
 from google import genai
 
-from lib.utils.constants import DEFAULT_SEARCH_LIMIT
+from lib.utils.constants import DEFAULT_SEARCH_LIMIT, GEMINI_MODEL
 from sentence_transformers import CrossEncoder
 
 load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
-model = "gemini-2.0-flash-001"
+model = GEMINI_MODEL
 
 
 def llm_rerank_individual(query: str, documents: list, limit) -> list:
@@ -110,7 +110,7 @@ def re_rank(query: str, documents: list[dict], method: str = "batch", limit: int
 
     results = []
     match method:
-        case "individually":
+        case "individual":
             results = llm_rerank_individual(query, documents, limit)
         case "batch":
             results = llm_rerank_batch(query, documents, limit)
@@ -120,3 +120,37 @@ def re_rank(query: str, documents: list[dict], method: str = "batch", limit: int
             raise ValueError("unknown method used")
 
     return results
+
+
+def evaluate_results(query: str, results: list[dict]) -> list[int]:
+
+    formatted_results = [
+        f'"{res["title"]} - {res["document"]}"' for res in results]
+
+    prompt = f"""Rate how relevant each result is to this query on a 0-3 scale:
+
+                Query: "{query}"
+
+                Results:
+                {chr(10).join(formatted_results)}
+
+                Scale:
+                - 3: Highly relevant
+                - 2: Relevant
+                - 1: Marginally relevant
+                - 0: Not relevant
+
+                Do NOT give any numbers out than 0, 1, 2, or 3.
+
+                Return ONLY the scores in the same order you were given the documents. Return a valid JSON list, nothing else. For example:
+
+                [2, 0, 3, 2, 0, 1]"""
+
+    response = client.models.generate_content(model=model, contents=prompt)
+    if response.text:
+        try:
+            scores = json.loads(response.text.strip())
+        except json.JSONDecodeError:
+            print("Warning: Failed to decode evaluation scores")
+
+    return scores

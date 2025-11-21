@@ -1,7 +1,7 @@
 import argparse
 
 from lib.hybrid_search import get_hybrid_search
-from lib.llm_reranker import llm_rerank_batch, llm_rerank_individual, re_rank
+from lib.llm_reranker import evaluate_results, llm_rerank_batch, llm_rerank_individual, re_rank
 from lib.utils.constants import DEFAULT_K, DEFAULT_SEARCH_LIMIT, DEFAULT_WEIGHT, SEARCH_LIMIT_MULTIPLIER
 from lib.utils.hybrid_search_utils import normalize_scores
 from lib.query_enhancer import query_enhancer
@@ -47,6 +47,9 @@ def main() -> None:
 
     rrf_parser.add_argument("--rerank-method", type=str,
                             choices=["individual", "batch", "cross_encoder"], default="individual", help="Query re rank method")
+
+    rrf_parser.add_argument("--evaluate", action="store_true",
+                            help="Evaluate the relevance of the results using LLM")
 
     args = parser.parse_args()
 
@@ -99,15 +102,21 @@ def main() -> None:
             print(
                 f"Reciprocal Rank Fusion Results for '{enhanced_query}' (k={args.k})")
             for i, result in enumerate(results, 1):
-                print(f"{i}. {result['title']}")
+                print(f"{i}. {result.get('title', 'Unknown')}")
                 print(
-                    f"\t\tCross Encoder Score: {result['cross_encoder_score']:.3f}/10")
+                    f"\t\tCross Encoder Score: {result.get('cross_encoder_score', 0.00):.3f}/10")
                 # print(f"\t\tRerank Score: {result['re_rank_score']:.3f}/10")
-                print(f"\t\tRRF Score: {result['rrf_score']:.3f}")
+                print(f"\t\tRRF Score: {result.get('rrf_score', 0.00):.3f}")
                 print(
-                    f"\t\tBM25 Rank: {result['bm25_rank']}, Semantic Rank: {result['semantic_rank']}")
-                print(f"\t\t{result['document']}")
+                    f"\t\tBM25 Rank: {result.get('bm25_rank', 0)}, Semantic Rank: {result.get('semantic_rank', 0)}")
+                print(f"\t\t{result.get('document', 'No document available')}")
                 print()
+
+            if args.evaluate == "evaluate":
+                relevance_scores = evaluate_results(enhanced_query, results)
+                print("Relevance Scores:")
+                for i, score in enumerate(relevance_scores, 1):
+                    print(f"{i}. {results[i-1]['title']}: {score}/3")
 
 
 if __name__ == "__main__":

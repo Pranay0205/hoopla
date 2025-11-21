@@ -8,10 +8,9 @@ from lib.utils.search_utils import load_golden_dataset, load_movies
 
 def precision_at_k(retrieved_docs: list[str], relevant_docs: set[str], k: int = 5
                    ) -> float:
-    top_k = retrieved_docs[:k]
     relevant_count = 0
 
-    for doc in top_k:
+    for doc in retrieved_docs[:k]:
         if doc in relevant_docs:
             relevant_count += 1
 
@@ -24,9 +23,8 @@ def evaluate_f1_score(precision: float, recall: float) -> float:
 
 
 def recall_at_k(retrieved_docs: list[str], relevant_docs: set[str], k: int = 5) -> float:
-    top_k = retrieved_docs[:k]
     relevant_count = 0
-    for doc in top_k:
+    for doc in retrieved_docs[:k]:
         if doc in relevant_docs:
             relevant_count += 1
     return relevant_count / len(relevant_docs)
@@ -48,14 +46,14 @@ def evaluate_command(limit: int = DEFAULT_SEARCH_LIMIT) -> dict:
         query = test_case["query"]
         relevant_docs = set(test_case["relevant_docs"])
         search_results = hybrid_search.rrf_search(query, k=60, limit=limit)
-        retrived_docs = []
+        retrieved_documents = []
         for result in search_results:
             title = result.get("title", "")
             if title:
-                retrived_docs.append(title)
+                retrieved_documents.append(title)
 
-        precision = precision_at_k(retrived_docs, relevant_docs, limit)
-        recall = recall_at_k(retrived_docs, relevant_docs, limit)
+        precision = precision_at_k(retrieved_documents, relevant_docs, limit)
+        recall = recall_at_k(retrieved_documents, relevant_docs, limit)
         f1_score = evaluate_f1_score(precision, recall)
 
         print(
@@ -65,7 +63,7 @@ def evaluate_command(limit: int = DEFAULT_SEARCH_LIMIT) -> dict:
             "precision": precision,
             "recall": recall,
             "f1_score": f1_score,
-            "retrieved": retrived_docs[:limit],
+            "retrieved": retrieved_documents[:limit],
             "relevant": list(relevant_docs)
         }
 

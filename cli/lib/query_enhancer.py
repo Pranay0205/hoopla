@@ -1,12 +1,14 @@
 import os
 
 from dotenv import load_dotenv  # type: ignore
-from google import genai  # type: ignore
+from google import genai
+
+from lib.utils.constants import GEMINI_MODEL  # type: ignore
 
 load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
-model = "gemini-2.0-flash-001"
+model = GEMINI_MODEL
 
 
 def query_enhancer(method: str, query: str) -> str | None:
