@@ -112,9 +112,10 @@ def main() -> None:
                 print(f"\t\t{result.get('document', 'No document available')}")
                 print()
 
-            if args.evaluate == "evaluate":
+            if args.evaluate:
                 relevance_scores = evaluate_results(enhanced_query, results)
-                print("Relevance Scores:")
+
+                print(f"Relevance Scores: {relevance_scores}\n")
                 for i, score in enumerate(relevance_scores, 1):
                     print(f"{i}. {results[i-1]['title']}: {score}/3")
 

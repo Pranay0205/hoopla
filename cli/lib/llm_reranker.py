@@ -5,7 +5,7 @@ import time
 from dotenv import load_dotenv  # type: ignore
 from google import genai
 
-from lib.utils.constants import DEFAULT_SEARCH_LIMIT, GEMINI_MODEL
+from lib.utils.constants import DEFAULT_SEARCH_LIMIT, GEMINI_MODEL, RATE_TIME_SECONDS
 from sentence_transformers import CrossEncoder
 
 load_dotenv()
@@ -31,6 +31,7 @@ def llm_rerank_individual(query: str, documents: list, limit) -> list:
                   Give me ONLY the number in your response, no other text or explanation.
 
                   Score:"""
+        rate_limit()
         response = client.models.generate_content(model=model, contents=prompt)
         if response.text:
             try:
@@ -39,8 +40,6 @@ def llm_rerank_individual(query: str, documents: list, limit) -> list:
                 print(
                     f"Warning: Invalid score '{response.text}' for {doc.get('title', 'Unknown')}")
                 doc["re_rank_score"] = 0
-
-        time.sleep(3)
 
         sorted_results = sorted(
             documents, key=lambda x: x.get("re_rank_score", 0), reverse=True)
@@ -67,6 +66,7 @@ def llm_rerank_batch(query: str, documents: list, limit: int) -> list:
 
                 [75, 12, 34, 2, 1]
                 """
+    rate_limit()
     response = client.models.generate_content(model=model, contents=prompt)
     if response.text:
         ranked_ids = json.loads(response.text.strip())
@@ -91,6 +91,7 @@ def llm_rerank_cross_encoder(query: str, documents: list[dict], limit: int) -> l
         pairs.append(
             [query, f"{doc.get('title', '')} - {doc.get('document', '')}"])
 
+    rate_limit()
     cross_encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L2-v2")
 
     # scores is a list of numbers, one for each pair
@@ -142,15 +143,28 @@ def evaluate_results(query: str, results: list[dict]) -> list[int]:
 
                 Do NOT give any numbers out than 0, 1, 2, or 3.
 
-                Return ONLY the scores in the same order you were given the documents. Return a valid JSON list, nothing else. For example:
+                CRITICAL: Return ONLY a valid JSON array of numbers (0-3). 
+                Do NOT include:
+                - Markdown code blocks (no ```)
+                - The word "json"
+                - Any explanatory text
+                - Quotes around the array
 
+                Return EXACTLY in this format:
                 [2, 0, 3, 2, 0, 1]"""
-
+    rate_limit()
     response = client.models.generate_content(model=model, contents=prompt)
+
     if response.text:
         try:
             scores = json.loads(response.text.strip())
+            return scores
         except json.JSONDecodeError:
             print("Warning: Failed to decode evaluation scores")
 
-    return scores
+    return []
+
+
+def rate_limit():
+    """Prevent exceeding API rate limits (15 RPM)"""
+    time.sleep(RATE_TIME_SECONDS)
