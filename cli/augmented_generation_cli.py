@@ -1,12 +1,8 @@
 import argparse
 
-from torch import Value, ge
 
-from lib.llm_reranker import re_rank
-from lib.query_enhancer import query_enhancer
-from lib.hybrid_search import get_hybrid_search
-from lib.rag_generator import generate_rag_response
-from lib.utils.constants import DEFAULT_K, DEFAULT_SEARCH_LIMIT, SEARCH_LIMIT_MULTIPLIER
+from lib.augment_generation import citation_command, llm_summarizer_command, rag_command
+from lib.utils.constants import DEFAULT_K, DEFAULT_SEARCH_LIMIT
 
 
 def main():
@@ -15,6 +11,7 @@ def main():
     subparsers = parser.add_subparsers(
         dest="command", help="Available commands")
 
+    # RAG Command Parser
     rag_parser = subparsers.add_parser(
         "rag", help="Perform RAG (search + generate answer)"
     )
@@ -32,38 +29,43 @@ def main():
     rag_parser.add_argument("--rerank-method", type=str,
                             choices=["individual", "batch", "cross_encoder"], default="individual", help="Query re-rank method")
 
+    # LLM Summarize Parser
+    llm_summarize_parser = subparsers.add_parser(
+        "summarize", help="Performs summarization of results"
+    )
+
+    llm_summarize_parser.add_argument(
+        "query", type=str, help="Search query for RAG")
+
+    llm_summarize_parser.add_argument(
+        "--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Limits the search results to set value")
+
+    # Citation Parser
+    citation_parser = subparsers.add_parser(
+        "citations", help="Performs summarization of results"
+    )
+
+    citation_parser.add_argument(
+        "query", type=str, help="Search query for RAG")
+
+    citation_parser.add_argument(
+        "--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Limits the search results to set value")
     args = parser.parse_args()
 
     match args.command:
         case "rag":
             query = args.query
-            enhanced_query = query_enhancer(args.enhance, query)
 
-            if not enhanced_query:
-                raise ValueError("Failed to enhance the query")
+            rag_command(query, args.enhance,
+                        args.rerank_method, args.k, args.limit)
+        case "summarize":
+            query = args.query
 
-            hybrid_search = get_hybrid_search()
+            llm_summarizer_command(query, args.limit)
+        case "citation":
+            query = args.query
 
-            if args.rerank_method:
-                results = hybrid_search.rrf_search(
-                    enhanced_query, args.k, args.limit * SEARCH_LIMIT_MULTIPLIER)
-
-            else:
-                results = hybrid_search.rrf_search(
-                    enhanced_query, args.k, args.limit)
-
-            results = re_rank(enhanced_query, results,
-                              args.rerank_method, args.limit)
-
-            print("Search Results:\n")
-            for res in results:
-                print(f"  - {res["title"]}")
-
-            response = generate_rag_response(query, results)
-
-            print("RAG Response:")
-            print(response)
-
+            citation_command(query, args.limit)
         case _:
             parser.print_help()
 
