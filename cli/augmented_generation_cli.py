@@ -42,14 +42,14 @@ def main():
 
     # Citation Parser
     citation_parser = subparsers.add_parser(
-        "citations", help="Performs summarization of results"
-    )
+        "citations", help="Performs summarization with citation of results")
 
     citation_parser.add_argument(
         "query", type=str, help="Search query for RAG")
 
     citation_parser.add_argument(
         "--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Limits the search results to set value")
+
     args = parser.parse_args()
 
     match args.command:
@@ -62,7 +62,8 @@ def main():
             query = args.query
 
             llm_summarizer_command(query, args.limit)
-        case "citation":
+
+        case "citations":
             query = args.query
 
             citation_command(query, args.limit)
