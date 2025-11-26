@@ -1,7 +1,7 @@
 import argparse
 
 
-from lib.augment_generation import citation_command, llm_summarizer_command, rag_command
+from lib.augment_generation import citation_command, llm_summarizer_command, question_command, rag_command
 from lib.utils.constants import DEFAULT_K, DEFAULT_SEARCH_LIMIT
 
 
@@ -50,6 +50,16 @@ def main():
     citation_parser.add_argument(
         "--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Limits the search results to set value")
 
+    # Question Parser
+    question_parser = subparsers.add_parser(
+        "question", help="Ask question to LLM to get answer")
+
+    question_parser.add_argument(
+        "query", type=str, help="Question to be asked")
+
+    question_parser.add_argument(
+        "--limit", type=int, default=DEFAULT_SEARCH_LIMIT, help="Limits the search results to set value")
+
     args = parser.parse_args()
 
     match args.command:
@@ -67,6 +77,11 @@ def main():
             query = args.query
 
             citation_command(query, args.limit)
+
+        case "question":
+            query = args.query
+
+            question_command(query, args.limit)
         case _:
             parser.print_help()
 

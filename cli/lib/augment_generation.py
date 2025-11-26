@@ -102,6 +102,33 @@ def llm_citation(query: str, results: list[dict]) -> str:
     return response
 
 
+def llm_question_and_answer(question: str, results: list[dict]) -> str:
+    template = """Answer the user's question based on the provided movies that are available on Hoopla.
+                    This should be tailored to Hoopla users. Hoopla is a movie streaming service.
+
+                    Question: {query}
+
+                    Documents:
+                    {docs}
+
+                    Instructions:
+                    - Answer questions directly and concisely
+                    - Be casual and conversational
+                    - Don't be cringe or hype-y
+                    - Talk like a normal person would in a chat conversation
+
+                    Answer:"""
+
+    prompt = _create_prompt(template, question, results)
+
+    response = _generate_llm_response(prompt)
+
+    if not response or response == "No response from LLM":
+        raise ValueError("Failed to get response from LLM")
+
+    return response
+
+
 def _search_and_display_results(query: str, k: int, limit: int, method: str = "individual") -> list[dict]:
     """Common function to search and display results."""
     print("\nSearching...")
@@ -121,10 +148,9 @@ def _search_and_display_results(query: str, k: int, limit: int, method: str = "i
     return results
 
 
-def _print_summary(summary: str):
-    """Common function to print summary results."""
-    print("\nSummary:")
-    print(summary)
+def _print_response(response: str):
+    """Common function to print llm response."""
+    print(response)
 
 
 def llm_summarizer_command(query: str, limit: int):
@@ -134,7 +160,7 @@ def llm_summarizer_command(query: str, limit: int):
 
     print("\nGenerating summary...")
     summary = llm_summarization(query, results)
-    _print_summary(summary)
+    _print_response(summary)
 
 
 def citation_command(query: str, limit: int):
@@ -144,7 +170,18 @@ def citation_command(query: str, limit: int):
 
     print("\nGenerating summary...")
     summary = llm_citation(query, results)
-    _print_summary(summary)
+    _print_response(summary)
+
+
+def question_command(question: str, limit: int):
+    """Execute LLM Question and Answer pipeline with question"""
+    print(f"Original Question: {question}")
+    results = _search_and_display_results(question, DEFAULT_K, limit)
+
+    print("\n Generating Answer...")
+    answer = llm_question_and_answer(question=question, results=results)
+
+    _print_response(answer)
 
 
 def rag_command(query: str, enhance: str, method: str, k: int, limit: int):
@@ -162,6 +199,6 @@ def rag_command(query: str, enhance: str, method: str, k: int, limit: int):
 
     print("\nGenerating summary...")
     response = generate_rag_response(query, results)
-    _print_summary(response)
+    _print_response(response)
 
     return response
