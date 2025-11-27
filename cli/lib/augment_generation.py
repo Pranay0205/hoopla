@@ -4,8 +4,7 @@ import os
 from dotenv import load_dotenv  # type: ignore
 from google import genai
 
-from lib.llm_reranker import rate_limit
-from lib.llm_reranker import re_rank
+from lib.utils.common_utils import rate_limit
 from lib.query_enhancer import query_enhancer
 from lib.hybrid_search import get_hybrid_search
 from lib.utils.constants import DEFAULT_K, GEMINI_MODEL, SEARCH_LIMIT_MULTIPLIER
@@ -136,10 +135,6 @@ def _search_and_display_results(query: str, k: int, limit: int, method: str = "i
 
     search_limit = limit * SEARCH_LIMIT_MULTIPLIER if method else limit
     results = hybrid_search.rrf_search(query, k, search_limit)
-
-    if method:
-        print("Re-ranking results...")
-        results = re_rank(query, results, method, limit)
 
     print(f"\nFound {len(results)} results:")
     for i, res in enumerate(results, 1):

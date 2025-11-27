@@ -4,6 +4,7 @@ from dotenv import load_dotenv  # type: ignore
 from google import genai
 
 from lib.utils.constants import GEMINI_MODEL  # type: ignore
+from lib.utils.common_utils import rate_limit
 
 load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
@@ -68,6 +69,7 @@ def query_enhancer(method: str, query: str) -> str | None:
         case _:
             return query
 
+    rate_limit()
     response = client.models.generate_content(model=model, contents=prompt)
 
     if response.text:

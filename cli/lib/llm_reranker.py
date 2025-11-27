@@ -4,6 +4,7 @@ import time
 
 from dotenv import load_dotenv  # type: ignore
 from google import genai
+from lib.utils.common_utils import rate_limit
 
 from lib.utils.constants import DEFAULT_SEARCH_LIMIT, GEMINI_MODEL, RATE_TIME_SECONDS
 from sentence_transformers import CrossEncoder
@@ -163,8 +164,3 @@ def evaluate_results(query: str, results: list[dict]) -> list[int]:
             print("Warning: Failed to decode evaluation scores")
 
     return []
-
-
-def rate_limit():
-    """Prevent exceeding API rate limits (15 RPM)"""
-    time.sleep(RATE_TIME_SECONDS)

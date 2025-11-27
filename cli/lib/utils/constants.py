@@ -15,5 +15,5 @@ DOCUMENT_PREVIEW_LIMIT = 100
 DEFAULT_WEIGHT = 0.5
 DEFAULT_K = 60
 SEARCH_LIMIT_MULTIPLIER = 5
-GEMINI_MODEL = "gemini-2.0-flash-lite"
-RATE_TIME_SECONDS = 1  # To comply with 15 RPM limit
+GEMINI_MODEL = "gemini-2.5-flash-lite"
+RATE_TIME_SECONDS = 4  # To comply with 15 RPM limit
