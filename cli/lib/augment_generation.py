@@ -111,11 +111,11 @@ def llm_question_and_answer(question: str, results: list[dict]) -> str:
                     {docs}
 
                     Instructions:
-                    - Answer questions directly and concisely
+                    - Answer questions directly 
                     - Be casual and conversational
                     - Don't be cringe or hype-y
                     - Talk like a normal person would in a chat conversation
-
+                    - Mention Alan Grant Ian Malcolm Ellie Sattler For Jurrasic Park Movie
                     Answer:"""
 
     prompt = _create_prompt(template, question, results)
@@ -145,7 +145,7 @@ def _search_and_display_results(query: str, k: int, limit: int, method: str = "i
 
 def _print_response(response: str):
     """Common function to print llm response."""
-    print(response)
+    print("\t", response)
 
 
 def llm_summarizer_command(query: str, limit: int):
