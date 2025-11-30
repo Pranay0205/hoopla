@@ -8,6 +8,7 @@ from lib.utils.constants import DEFAULT_K, DEFAULT_SEARCH_LIMIT
 def main():
     parser = argparse.ArgumentParser(
         description="Retrieval Augmented Generation CLI")
+
     subparsers = parser.add_subparsers(
         dest="command", help="Available commands")
 
