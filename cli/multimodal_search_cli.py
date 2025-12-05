@@ -27,10 +27,10 @@ def main() -> None:
 
             print("executing command verify image embedding")
 
-            image_path = os.path.join(PROJECT_ROOT, args.image_path)
-
-            if image_path == "":
+            if args.image_path == "":
                 raise ValueError("path cannot be empty")
+
+            image_path = os.path.join(PROJECT_ROOT, args.image_path)
 
             image_embeddings = verify_image_embedding(image_path)
 
@@ -38,3 +38,7 @@ def main() -> None:
                 raise ValueError("no embeddings generated")
 
             print(f"Embedding shape: {image_embeddings.shape[0]} dimensions")
+
+
+if __name__ == "__main__":
+    main()
